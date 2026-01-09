@@ -1,0 +1,29 @@
+[package]
+name = "rust_lib_pure_pitch"
+version = "0.1.0"
+edition = "2024"
+license = "MIT OR Apache-2.0"
+
+[lib]
+crate-type = ["cdylib", "staticlib"]
+
+[dependencies]
+flutter_rust_bridge = "=2.11.1"
+anyhow = "1.0"
+log = "0.4"
+# Audio Decoding
+symphonia = { version = "0.5", features = ["mp3", "aac", "wav"] }
+# Resampling
+rubato = "1.0"
+# AI Inference (ONNX Runtime)
+ort = { version = "2.0.0-rc.11", features = ["load-dynamic"] }
+# Math & DSP
+ndarray = "0.17"
+rustfft = "6.4"
+# Real-time Pitch Detection
+pitch-detection = "0.3"
+audioadapter = "2.0.0"
+audioadapter-buffers = "2.0.0"
+
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(frb_expand)'] }
