@@ -61,6 +61,7 @@ class _PitchDetectorPageState extends ConsumerState<PitchDetectorPage> with Sing
             Positioned.fill(
               child: PitchVisualizer(
                 history: pitchState.history,
+                noteEvents: pitchState.analysisResults,
                 timeWindowSeconds: 5.0,
               ),
             ),
