@@ -1,6 +1,7 @@
 use ndarray::Array3;
 use crate::api::pitch::NoteEvent;
 
+#[flutter_rust_bridge::frb(ignore)]
 pub fn extract_notes(frames: Array3<f32>, _onsets: Array3<f32>) -> Vec<NoteEvent> {
     let threshold = 0.3;
     let min_duration_frames = 3;
