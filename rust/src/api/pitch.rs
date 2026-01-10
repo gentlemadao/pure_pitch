@@ -12,7 +12,8 @@ use symphonia::core::codecs::DecoderOptions;
 use symphonia::core::audio::{AudioBufferRef, Signal};
 use rubato::{Resampler, Async, FixedAsync, SincInterpolationParameters, SincInterpolationType, WindowFunction};
 use audioadapter_buffers::owned::InterleavedOwned;
-use ndarray::Axis;
+use ndarray::{Array3, Axis};
+use ort::session::Session;
 
 use crate::api::dsp::{stft, log_magnitude};
 
@@ -30,35 +31,30 @@ pub struct LivePitch {
     pub clarity: f32,    // Confidence (0.0 - 1.0)
 }
 
-use ort::session::Session;
-
 /// Analyze an audio file and return a list of note events.
 pub fn analyze_audio_file(audio_path: String, model_path: String) -> Result<Vec<NoteEvent>> {
     let samples = decode_and_resample(&audio_path, 22050)?;
+    let input_tensor = preprocess_audio(&samples);
     
-    // Manual STFT
-    let fft_size = 2048;
-    let hop_size = 512;
-    let spectrogram = stft(&samples, fft_size, hop_size);
-    let log_spec = log_magnitude(spectrogram);
-
-    // Prepare input for AI model
-    // Target Shape: [1, 1, Frames, FreqBins]
-    let _num_frames = log_spec.nrows();
-    let _num_bins = log_spec.ncols();
-    
-    let input_tensor = log_spec.insert_axis(Axis(0)).insert_axis(Axis(0));
-    // Ensure it's f32 and correctly shaped
     let _input_tensor_view = input_tensor.view();
 
     // Load model and run inference
     let _session = Session::builder()?.commit_from_file(model_path)?;
-    // let outputs = session.run(inputs!["input" => input_tensor]?)?;
+    // let outputs = session.run(inputs!["input" => input_tensor_view]?)?;
     // let output_tensor = outputs["output"].try_extract_tensor::<f32>()?;
 
     // TODO: Post-processing to NoteEvents
 
     Ok(vec![])
+}
+
+fn preprocess_audio(samples: &[f32]) -> Array3<f32> {
+    // Basic Pitch expects [Batch, Time, Channels] -> [1, N, 1]
+    // And samples should be normalized (Symphonia usually gives normalized f32).
+    // We assume samples are mono.
+    let len = samples.len();
+    let array = ndarray::Array::from_shape_vec((1, len, 1), samples.to_vec()).unwrap(); 
+    array
 }
 
 fn decode_and_resample(path: &str, target_sample_rate: u32) -> Result<Vec<f32>> {
@@ -167,6 +163,14 @@ pub fn detect_pitch_live(samples: Vec<f32>, sample_rate: f64) -> Result<LivePitc
 #[cfg(test)]
 mod tests {
     use super::*;
+    use ndarray::Array3;
+
+    #[test]
+    fn test_preprocess_audio_shape() {
+        let samples = vec![0.0; 1024];
+        let tensor = preprocess_audio(&samples);
+        assert_eq!(tensor.shape(), &[1, 1024, 1]);
+    }
 
     #[test]
     fn test_detect_pitch_sine_wave() {
@@ -189,23 +193,8 @@ mod tests {
 
     #[test]
     fn test_analyze_audio_file_model_loading() {
-        // This test expects to fail on AUDIO loading (since file doesn't exist),
-        // but BEFORE that, it will validate compilation of the new function signature.
-        // To properly test model loading, we need to bypass audio loading or have a valid audio file.
-        
-        // Let's create a temporary dummy audio file?
-        // Or just verify compilation and Basic structure for now.
-        
         let model_path = "../assets/models/basic_pitch.onnx"; 
-        
-        // We expect an error, but we want to confirm it's NOT a model loading error if possible?
-        // Actually, decode_and_resample is called first. So it will error there.
-        
         let result = analyze_audio_file("non_existent_audio.wav".to_string(), model_path.to_string());
         assert!(result.is_err());
-        
-        // If we want to verify model loading, we need to pass the audio loading.
-        // This is hard without a mock.
-        // But the goal "Initialize ORT session" is met if the code compiles and attempts to load.
     }
 }
