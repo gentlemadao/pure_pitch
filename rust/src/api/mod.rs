@@ -1,2 +1,2 @@
 pub mod pitch;
-pub mod dsp;
+pub(crate) mod dsp;

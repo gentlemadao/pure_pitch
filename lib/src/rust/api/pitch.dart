@@ -6,9 +6,16 @@
 import '../frb_generated.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
+// These functions are ignored because they are not marked as `pub`: `decode_and_resample`
+
 /// Analyze an audio file and return a list of note events.
-Future<List<NoteEvent>> analyzeAudioFile({required String path}) =>
-    RustLib.instance.api.crateApiPitchAnalyzeAudioFile(path: path);
+Future<List<NoteEvent>> analyzeAudioFile({
+  required String audioPath,
+  required String modelPath,
+}) => RustLib.instance.api.crateApiPitchAnalyzeAudioFile(
+  audioPath: audioPath,
+  modelPath: modelPath,
+);
 
 /// Detect pitch from a real-time audio buffer.
 Future<LivePitch> detectPitchLive({

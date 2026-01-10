@@ -75,7 +75,10 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
 }
 
 abstract class RustLibApi extends BaseApi {
-  Future<List<NoteEvent>> crateApiPitchAnalyzeAudioFile({required String path});
+  Future<List<NoteEvent>> crateApiPitchAnalyzeAudioFile({
+    required String audioPath,
+    required String modelPath,
+  });
 
   Future<LivePitch> crateApiPitchDetectPitchLive({
     required List<double> samples,
@@ -93,13 +96,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @override
   Future<List<NoteEvent>> crateApiPitchAnalyzeAudioFile({
-    required String path,
+    required String audioPath,
+    required String modelPath,
   }) {
     return handler.executeNormal(
       NormalTask(
         callFfi: (port_) {
           final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_String(path, serializer);
+          sse_encode_String(audioPath, serializer);
+          sse_encode_String(modelPath, serializer);
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
@@ -112,14 +117,17 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           decodeErrorData: sse_decode_AnyhowException,
         ),
         constMeta: kCrateApiPitchAnalyzeAudioFileConstMeta,
-        argValues: [path],
+        argValues: [audioPath, modelPath],
         apiImpl: this,
       ),
     );
   }
 
   TaskConstMeta get kCrateApiPitchAnalyzeAudioFileConstMeta =>
-      const TaskConstMeta(debugName: "analyze_audio_file", argNames: ["path"]);
+      const TaskConstMeta(
+        debugName: "analyze_audio_file",
+        argNames: ["audioPath", "modelPath"],
+      );
 
   @override
   Future<LivePitch> crateApiPitchDetectPitchLive({

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:typed_data';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
@@ -6,8 +7,10 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:record/record.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import 'package:pure_pitch/core/utils/asset_loader.dart';
 import 'package:pure_pitch/features/pitch/domain/models/pitch_state.dart';
 import 'package:pure_pitch/src/rust/api/pitch.dart';
+import 'package:pure_pitch/src/rust/frb_generated.dart';
 
 part 'pitch_provider.g.dart';
 
@@ -33,12 +36,13 @@ class Pitch extends _$Pitch {
     );
 
     if (result != null && result.files.single.path != null) {
-      final path = result.files.single.path!;
+      final audioPath = result.files.single.path!;
       
       state = state.copyWith(isAnalyzing: true, errorMessage: null, analysisResults: []);
       
       try {
-        final noteEvents = await analyzeAudioFile(path: path);
+        final modelPath = await AssetLoader.loadModelPath('basic_pitch.onnx');
+        final noteEvents = await analyzeAudioFile(audioPath: audioPath, modelPath: modelPath);
         state = state.copyWith(
           isAnalyzing: false, 
           analysisResults: noteEvents,

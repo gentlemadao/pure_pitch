@@ -67,12 +67,14 @@ fn wire__crate__api__pitch__analyze_audio_file_impl(
             };
             let mut deserializer =
                 flutter_rust_bridge::for_generated::SseDeserializer::new(message);
-            let api_path = <String>::sse_decode(&mut deserializer);
+            let api_audio_path = <String>::sse_decode(&mut deserializer);
+            let api_model_path = <String>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| {
                 transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
                     (move || {
-                        let output_ok = crate::api::pitch::analyze_audio_file(api_path)?;
+                        let output_ok =
+                            crate::api::pitch::analyze_audio_file(api_audio_path, api_model_path)?;
                         Ok(output_ok)
                     })(),
                 )
