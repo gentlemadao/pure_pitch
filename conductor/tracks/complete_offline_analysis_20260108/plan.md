@@ -1,7 +1,7 @@
 # Track Plan: Complete Offline Audio Analysis
 
 ## Phase 1: Model Asset & Rust Setup
-- [ ] Task: Model Management
+- [x] Task: Model Management a9d2cf4
     - [ ] Copy `/Volumes/M2/PythonProjects/basic_pitch.onnx` to `assets/models/basic_pitch.onnx`.
     - [ ] Update `pubspec.yaml` to include the model asset.
     - [ ] Implement a helper in Rust/Dart to locate the model file path at runtime.
