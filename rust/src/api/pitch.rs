@@ -31,17 +31,34 @@ pub struct LivePitch {
     pub clarity: f32,    // Confidence (0.0 - 1.0)
 }
 
+use ort::inputs;
+
 /// Analyze an audio file and return a list of note events.
 pub fn analyze_audio_file(audio_path: String, model_path: String) -> Result<Vec<NoteEvent>> {
     let samples = decode_and_resample(&audio_path, 22050)?;
-    let input_tensor = preprocess_audio(&samples);
-    
+    run_inference_internal(&samples, &model_path)
+}
+
+fn run_inference_internal(samples: &[f32], model_path: &str) -> Result<Vec<NoteEvent>> {
+    let input_tensor = preprocess_audio(samples);
     let _input_tensor_view = input_tensor.view();
 
     // Load model and run inference
-    let _session = Session::builder()?.commit_from_file(model_path)?;
-    // let outputs = session.run(inputs!["input" => input_tensor_view]?)?;
-    // let output_tensor = outputs["output"].try_extract_tensor::<f32>()?;
+    let mut session = Session::builder()?.commit_from_file(model_path)?;
+    
+    // Convert to ORT Value
+    let input_value = ort::value::Tensor::from_array(input_tensor)?;
+    
+    // Basic Pitch inputs: "input_2" -> [Batch, Time, 1]
+    let outputs = session.run(inputs!["input_2" => input_value])?;
+    
+    // Outputs: "note", "onset", "contour"
+    let _note_tensor = outputs["note"].try_extract_tensor::<f32>()?;
+    let _onset_tensor = outputs["onset"].try_extract_tensor::<f32>()?;
+    let _contour_tensor = outputs["contour"].try_extract_tensor::<f32>()?;
+
+    // Verify shapes if needed (for debugging/testing)
+    // println!("Note shape: {:?}", note_tensor.shape());
 
     // TODO: Post-processing to NoteEvents
 
@@ -196,5 +213,21 @@ mod tests {
         let model_path = "../assets/models/basic_pitch.onnx"; 
         let result = analyze_audio_file("non_existent_audio.wav".to_string(), model_path.to_string());
         assert!(result.is_err());
+    }
+
+    #[test]
+    #[ignore] // Requires ONNX Runtime dylib to be present in DYLD_LIBRARY_PATH
+    fn test_run_inference_internal() {
+        let model_path = "../assets/models/basic_pitch.onnx";
+        // Create 3 seconds of silence at 22050 Hz
+        let samples = vec![0.0; 22050 * 3];
+        
+        let result = run_inference_internal(&samples, model_path);
+        
+        // This should SUCCEED if model loads and runs.
+        assert!(result.is_ok());
+        let events = result.unwrap();
+        // Since it's silence, maybe 0 events? But we haven't implemented post-processing yet, so it returns empty vec anyway.
+        assert_eq!(events.len(), 0);
     }
 }
