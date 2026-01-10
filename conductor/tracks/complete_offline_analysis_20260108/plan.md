@@ -7,7 +7,7 @@
     - [ ] Implement a helper in Rust/Dart to locate the model file path at runtime.
     - [ ] Commit: `feat(assets): Add Basic Pitch ONNX model`
 
-- [ ] Task: Rust ORT Session Initialization
+- [x] Task: Rust ORT Session Initialization d37e81f
     - [ ] Update `analyze_audio_file` in `rust/src/api/pitch.rs` to load the ONNX model.
     - [ ] Configure `ort` session with Graph Optimization Level 3.
     - [ ] Verify input/output node names match `input_2`, `note`, `onset`, `contour`.
