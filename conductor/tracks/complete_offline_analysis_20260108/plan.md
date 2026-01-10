@@ -44,7 +44,7 @@
         - Map `duration` to width.
     - [ ] Commit: `feat(ui): Visualize offline analysis results`
 
-- [ ] Task: End-to-End Testing
+- [x] Task: End-to-End Testing a8a0578
     - [ ] Verify the full flow: Select File -> Process -> See Notes.
     - [ ] Optimize thresholds if too many/few notes are detected.
     - [ ] Commit: `fix: Tune analysis parameters`
