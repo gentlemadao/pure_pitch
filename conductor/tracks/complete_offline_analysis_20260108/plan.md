@@ -36,7 +36,7 @@
     - [ ] Commit: `feat(rust): Connect inference to post-processing`
 
 ## Phase 4: UI Visualization & Polish
-- [ ] Task: Update Pitch State & UI
+- [x] Task: Update Pitch State & UI 11ce88e
     - [ ] Ensure `PitchProvider` correctly handles the `List<NoteEvent>`.
     - [ ] Update `PitchVisualizer` to render `NoteEvent`s (horizontal bars) on the canvas.
         - Map `start_time` to X pixel.
