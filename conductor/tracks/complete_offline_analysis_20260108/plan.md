@@ -22,7 +22,7 @@
     - [ ] Test: Verify tensor shape matches model expectation.
     - [ ] Commit: `feat(rust): Implement audio preprocessing for Basic Pitch`
 
-- [ ] Task: Run Inference
+- [x] Task: Run Inference f16fc67
     - [ ] Execute `session.run` with the input tensor.
     - [ ] Extract `note`, `onset`, and `contour` output tensors.
     - [ ] Test: Run inference on a generated sine wave and assert output shapes.
