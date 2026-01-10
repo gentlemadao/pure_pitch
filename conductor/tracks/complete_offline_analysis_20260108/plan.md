@@ -29,7 +29,7 @@
     - [ ] Commit: `feat(rust): Execute Basic Pitch inference`
 
 ## Phase 3: Post-processing (The Heavy Lifting)
-- [ ] Task: Implement Note Extraction Logic
+- [x] Task: Implement Note Extraction Logic b227024
     - [ ] Create a new module `rust/src/api/basic_pitch_postproc.rs`.
     - [ ] Implement `extract_notes(frames: Array3<f32>, onsets: Array3<f32>) -> Vec<NoteEvent>`.
     - [ ] Logic:
