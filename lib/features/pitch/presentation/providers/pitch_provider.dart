@@ -36,24 +36,26 @@ class Pitch extends _$Pitch {
     );
 
     if (result != null && result.files.single.path != null) {
-      final audioPath = result.files.single.path!;
-      
-      state = state.copyWith(isAnalyzing: true, errorMessage: null, analysisResults: []);
-      
-      try {
-        final modelPath = await AssetLoader.loadModelPath('basic_pitch.onnx');
-        final noteEvents = await analyzeAudioFile(audioPath: audioPath, modelPath: modelPath);
-        state = state.copyWith(
-          isAnalyzing: false, 
-          analysisResults: noteEvents,
-        );
-      } catch (e) {
-        state = state.copyWith(
-          isAnalyzing: false,
-          errorMessage: e.toString(),
-        );
-        debugPrint("File analysis failed: $e");
-      }
+      await analyzePath(result.files.single.path!);
+    }
+  }
+
+  Future<void> analyzePath(String audioPath) async {
+    state = state.copyWith(isAnalyzing: true, errorMessage: null, analysisResults: []);
+    
+    try {
+      final modelPath = await AssetLoader.loadModelPath('basic_pitch.onnx');
+      final noteEvents = await analyzeAudioFile(audioPath: audioPath, modelPath: modelPath);
+      state = state.copyWith(
+        isAnalyzing: false, 
+        analysisResults: noteEvents,
+      );
+    } catch (e) {
+      state = state.copyWith(
+        isAnalyzing: false,
+        errorMessage: e.toString(),
+      );
+      debugPrint("File analysis failed: $e");
     }
   }
 
