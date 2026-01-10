@@ -30,17 +30,7 @@
 
 ## Phase 3: Post-processing (The Heavy Lifting)
 - [x] Task: Implement Note Extraction Logic b227024
-    - [ ] Create a new module `rust/src/api/basic_pitch_postproc.rs`.
-    - [ ] Implement `extract_notes(frames: Array3<f32>, onsets: Array3<f32>) -> Vec<NoteEvent>`.
-    - [ ] Logic:
-        1. Iterate through time frames.
-        2. Filter bins > threshold (0.3).
-        3. Use onsets to refine start times.
-        4. Join consecutive frames into single `NoteEvent`s.
-    - [ ] Test: Unit test with synthetic probability maps.
-    - [ ] Commit: `feat(rust): Implement Basic Pitch post-processing`
-
-- [ ] Task: Integrate Post-processing
+- [x] Task: Integrate Post-processing 107c1de
     - [ ] Call `extract_notes` in `analyze_audio_file`.
     - [ ] Return the resulting `Vec<NoteEvent>` to Dart.
     - [ ] Commit: `feat(rust): Connect inference to post-processing`
