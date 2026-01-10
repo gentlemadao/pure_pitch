@@ -15,7 +15,7 @@
     - [ ] Commit: `feat(rust): Initialize ORT session with Basic Pitch model`
 
 ## Phase 2: Preprocessing & Inference
-- [ ] Task: Audio Preprocessing Implementation
+- [x] Task: Audio Preprocessing Implementation a4b4a07
     - [ ] Modify `decode_and_resample` to ensure exact 22,050 Hz output.
     - [ ] Implement audio normalization (if needed, usually float -1.0 to 1.0).
     - [ ] Shape the `Vec<f32>` into `ndarray::Array3<f32>` with shape `[1, n_samples, 1]`.
