@@ -5,7 +5,10 @@ set -e
 ORT_VERSION="1.23.2"
 BASE_URL="https://github.com/microsoft/onnxruntime/releases/download/v${ORT_VERSION}"
 TARGET_FILE="libonnxruntime.dylib"
-OUTPUT_DIR="rust_builder/macos"
+
+# Determine script directory to handle relative paths correctly
+SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+OUTPUT_DIR="${SCRIPT_DIR}/../rust_builder/macos"
 
 echo "Downloading ONNX Runtime v${ORT_VERSION} for macOS..."
 
