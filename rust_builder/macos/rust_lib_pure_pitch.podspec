@@ -27,7 +27,7 @@ A new Flutter FFI plugin project.
   s.swift_version = '5.0'
 
   # Download the dylib during pod install so it is available for resources
-  s.prepare_command = 'sh ../../scripts/download_libs.sh'
+  s.prepare_command = 'sh ../../scripts/download_libs.sh macos'
 
   s.script_phase = {
     :name => 'Build Rust library',
