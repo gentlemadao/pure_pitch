@@ -39,20 +39,21 @@ class Pitch extends _$Pitch {
   }
 
   Future<void> analyzePath(String audioPath) async {
-    state = state.copyWith(isAnalyzing: true, errorMessage: null, analysisResults: []);
-    
+    state = state.copyWith(
+      isAnalyzing: true,
+      errorMessage: null,
+      analysisResults: [],
+    );
+
     try {
       final modelPath = await AssetLoader.loadModelPath('basic_pitch.onnx');
-      final noteEvents = await analyzeAudioFile(audioPath: audioPath, modelPath: modelPath);
-      state = state.copyWith(
-        isAnalyzing: false, 
-        analysisResults: noteEvents,
+      final noteEvents = await analyzeAudioFile(
+        audioPath: audioPath,
+        modelPath: modelPath,
       );
+      state = state.copyWith(isAnalyzing: false, analysisResults: noteEvents);
     } catch (e) {
-      state = state.copyWith(
-        isAnalyzing: false,
-        errorMessage: e.toString(),
-      );
+      state = state.copyWith(isAnalyzing: false, errorMessage: e.toString());
       debugPrint("File analysis failed: $e");
     }
   }
@@ -68,7 +69,7 @@ class Pitch extends _$Pitch {
   Future<void> _startCapture() async {
     if (await Permission.microphone.request().isGranted) {
       _recorder ??= AudioRecorder();
-      
+
       try {
         final stream = await _recorder!.startStream(
           const RecordConfig(
@@ -79,7 +80,7 @@ class Pitch extends _$Pitch {
         );
 
         _sub = stream.listen(_processAudioChunk);
-        
+
         state = state.copyWith(isRecording: true, history: []);
       } catch (e) {
         debugPrint("Start capture failed: $e");
@@ -104,12 +105,12 @@ class Pitch extends _$Pitch {
     final length = bytes.length;
     final numSamples = length ~/ 2;
     final samples = Float32List(numSamples);
-    
+
     final byteData = ByteData.sublistView(bytes);
 
     for (int i = 0; i < numSamples; i++) {
-        final sample = byteData.getInt16(i * 2, Endian.little);
-        samples[i] = sample / 32768.0;
+      final sample = byteData.getInt16(i * 2, Endian.little);
+      samples[i] = sample / 32768.0;
     }
 
     _analyze(samples);
@@ -117,25 +118,28 @@ class Pitch extends _$Pitch {
 
   Future<void> _analyze(Float32List buffer) async {
     try {
-      final result = await detectPitchLive(samples: buffer, sampleRate: _sampleRate.toDouble());
-      
+      final result = await detectPitchLive(
+        samples: buffer,
+        sampleRate: _sampleRate.toDouble(),
+      );
+
       final now = DateTime.now();
       final newPoint = TimestampedPitch(
-          now, 
-          hz: result.hz, 
-          midiNote: result.midiNote, 
-          clarity: result.clarity
+        now,
+        hz: result.hz,
+        midiNote: result.midiNote,
+        clarity: result.clarity,
       );
 
       final cutoff = now.subtract(const Duration(seconds: 6));
       final newHistory = [
         ...state.history.where((p) => p.time.isAfter(cutoff)),
-        newPoint
+        newPoint,
       ];
-      
+
       LivePitch? newCurrentPitch = state.currentPitch;
       if (result.clarity > 0.4) {
-         newCurrentPitch = result;
+        newCurrentPitch = result;
       }
 
       state = state.copyWith(

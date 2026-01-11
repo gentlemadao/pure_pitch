@@ -7,16 +7,18 @@ class AssetLoader {
     final directory = await getApplicationDocumentsDirectory();
     final filePath = '${directory.path}/$modelName';
     final file = File(filePath);
-    
+
     // Check if file exists, if not, copy it from assets
     if (!await file.exists()) {
       final byteData = await rootBundle.load('assets/models/$modelName');
-      await file.writeAsBytes(byteData.buffer.asUint8List(
-        byteData.offsetInBytes,
-        byteData.lengthInBytes,
-      ));
+      await file.writeAsBytes(
+        byteData.buffer.asUint8List(
+          byteData.offsetInBytes,
+          byteData.lengthInBytes,
+        ),
+      );
     }
-    
+
     return filePath;
   }
 }

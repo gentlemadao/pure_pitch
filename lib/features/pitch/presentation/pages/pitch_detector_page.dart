@@ -11,7 +11,8 @@ class PitchDetectorPage extends ConsumerStatefulWidget {
   ConsumerState<PitchDetectorPage> createState() => _PitchDetectorPageState();
 }
 
-class _PitchDetectorPageState extends ConsumerState<PitchDetectorPage> with SingleTickerProviderStateMixin {
+class _PitchDetectorPageState extends ConsumerState<PitchDetectorPage>
+    with SingleTickerProviderStateMixin {
   late Ticker _ticker;
 
   @override
@@ -33,107 +34,121 @@ class _PitchDetectorPageState extends ConsumerState<PitchDetectorPage> with Sing
   @override
   Widget build(BuildContext context) {
     final pitchState = ref.watch(pitchProvider);
-    
+
     ref.listen(pitchProvider.select((s) => s.isRecording), (prev, recording) {
-       if (recording) {
-         _ticker.start();
-       } else {
-         _ticker.stop();
-       }
+      if (recording) {
+        _ticker.start();
+      } else {
+        _ticker.stop();
+      }
     });
 
     final currentPitch = pitchState.currentPitch;
     final isRecording = pitchState.isRecording;
 
     return Scaffold(
-        appBar: AppBar(
-          title: const Text('Pure Pitch Detector'),
-          actions: [
-            IconButton(
-              onPressed: () => ref.read(pitchProvider.notifier).analyzeFile(),
-              icon: const Icon(Icons.audio_file),
-              tooltip: "Analyze Audio File",
+      appBar: AppBar(
+        title: const Text('Pure Pitch Detector'),
+        actions: [
+          IconButton(
+            onPressed: () => ref.read(pitchProvider.notifier).analyzeFile(),
+            icon: const Icon(Icons.audio_file),
+            tooltip: "Analyze Audio File",
+          ),
+        ],
+      ),
+      body: Stack(
+        children: [
+          Positioned.fill(
+            child: PitchVisualizer(
+              history: pitchState.history,
+              noteEvents: pitchState.analysisResults,
+              timeWindowSeconds: 5.0,
             ),
-          ],
-        ),
-        body: Stack(
-          children: [
-            Positioned.fill(
-              child: PitchVisualizer(
-                history: pitchState.history,
-                noteEvents: pitchState.analysisResults,
-                timeWindowSeconds: 5.0,
-              ),
-            ),
-            
-            if (pitchState.isAnalyzing)
-              const Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    CircularProgressIndicator(color: Colors.cyanAccent),
-                    SizedBox(height: 10),
-                    Text("Analyzing audio...", style: TextStyle(color: Colors.cyanAccent)),
-                  ],
-                ),
-              ),
+          ),
 
-            Center(
+          if (pitchState.isAnalyzing)
+            const Center(
               child: Column(
-                mainAxisAlignment: MainAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                   const SizedBox(height: 30),
-                   if (currentPitch != null && isRecording) ...[
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                          decoration: BoxDecoration(
-                            color: Colors.black54,
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Column(
-                            children: [
-                              Text(
-                                  "${currentPitch.hz.toStringAsFixed(1)} Hz",
-                                  style: Theme.of(context).textTheme.displayMedium?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.cyanAccent,
-                                  ),
-                              ),
-                              Text(
-                                  "MIDI: ${currentPitch.midiNote}",
-                                  style: Theme.of(context).textTheme.titleLarge?.copyWith(color: Colors.white),
-                              ),
-                            ],
-                          ),
-                        ),
-                   ] else if (!isRecording) ...[
-                        const SizedBox(height: 100),
-                        const Text("Ready to Record", style: TextStyle(fontSize: 24, color: Colors.white54)),
-                   ],
+                  CircularProgressIndicator(color: Colors.cyanAccent),
+                  SizedBox(height: 10),
+                  Text(
+                    "Analyzing audio...",
+                    style: TextStyle(color: Colors.cyanAccent),
+                  ),
                 ],
               ),
             ),
 
-            Positioned(
-              bottom: 50,
-              left: 0,
-              right: 0,
-              child: Center(
-                child: isRecording
-                    ? FloatingActionButton.large(
-                        onPressed: () => ref.read(pitchProvider.notifier).toggleCapture(),
-                        backgroundColor: Colors.redAccent,
-                        child: const Icon(Icons.stop),
-                      )
-                    : FloatingActionButton.large(
-                        onPressed: () => ref.read(pitchProvider.notifier).toggleCapture(),
-                        backgroundColor: Colors.cyanAccent,
-                        child: const Icon(Icons.mic, color: Colors.black),
-                      ),
-              ),
+          Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                const SizedBox(height: 30),
+                if (currentPitch != null && isRecording) ...[
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 10,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.black54,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Column(
+                      children: [
+                        Text(
+                          "${currentPitch.hz.toStringAsFixed(1)} Hz",
+                          style: Theme.of(context).textTheme.displayMedium
+                              ?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.cyanAccent,
+                              ),
+                        ),
+                        Text(
+                          "MIDI: ${currentPitch.midiNote}",
+                          style: Theme.of(
+                            context,
+                          ).textTheme.titleLarge?.copyWith(color: Colors.white),
+                        ),
+                      ],
+                    ),
+                  ),
+                ] else if (!isRecording) ...[
+                  const SizedBox(height: 100),
+                  const Text(
+                    "Ready to Record",
+                    style: TextStyle(fontSize: 24, color: Colors.white54),
+                  ),
+                ],
+              ],
             ),
-          ],
-        ),
+          ),
+
+          Positioned(
+            bottom: 50,
+            left: 0,
+            right: 0,
+            child: Center(
+              child: isRecording
+                  ? FloatingActionButton.large(
+                      onPressed: () =>
+                          ref.read(pitchProvider.notifier).toggleCapture(),
+                      backgroundColor: Colors.redAccent,
+                      child: const Icon(Icons.stop),
+                    )
+                  : FloatingActionButton.large(
+                      onPressed: () =>
+                          ref.read(pitchProvider.notifier).toggleCapture(),
+                      backgroundColor: Colors.cyanAccent,
+                      child: const Icon(Icons.mic, color: Colors.black),
+                    ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
