@@ -19,7 +19,7 @@ A new Flutter FFI plugin project.
   # `../src/*` so that the C sources can be shared among all target platforms.
   s.source           = { :path => '.' }
   s.source_files     = 'Classes/**/*'
-  s.vendored_libraries = 'libonnxruntime.dylib'
+  s.resources        = ['libonnxruntime.dylib']
   s.dependency 'FlutterMacOS'
 
   s.platform = :osx, '10.11'
@@ -29,7 +29,7 @@ A new Flutter FFI plugin project.
   s.script_phase = {
     :name => 'Build Rust library',
     # First argument is relative path to the `rust` folder, second is name of rust library
-    :script => 'sh "$PODS_TARGET_SRCROOT/../cargokit/build_pod.sh" ../../rust rust_lib_pure_pitch',
+    :script => 'if [ ! -f "$PODS_TARGET_SRCROOT/libonnxruntime.dylib" ]; then sh "$PODS_TARGET_SRCROOT/../../scripts/download_libs.sh"; fi && sh "$PODS_TARGET_SRCROOT/../cargokit/build_pod.sh" ../../rust rust_lib_pure_pitch',
     :execution_position => :before_compile,
     :input_files => ['${BUILT_PRODUCTS_DIR}/cargokit_phony'],
     # Let XCode know that the static library referenced in -force_load below is

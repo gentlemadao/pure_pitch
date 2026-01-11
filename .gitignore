@@ -44,6 +44,8 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 
-# Rust related
-/rust/target/
-**/*.rs.bk
+# Large binary files
+*.onnx
+libonnxruntime.dylib
+rust_builder/macos/libonnxruntime.dylib
+assets/models/

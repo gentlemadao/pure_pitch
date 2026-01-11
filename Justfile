@@ -18,13 +18,17 @@ analyze:
 rust-gen:
     flutter_rust_bridge_codegen generate
 
-# Compile the Rust core library
+# Build the Rust library
 rust-build:
     cd rust && cargo build
 
-# Execute all unit tests in the Rust core library
+# Run Rust unit tests
 rust-test:
     cd rust && cargo test
 
-# Execute a comprehensive project check (l10n, build, analyze, and rust-test)
+# Download external dynamic libraries (ONNX Runtime)
+setup-libs:
+    ./scripts/download_libs.sh
+
+# Perform a full check: localization, code generation, analysis, and tests
 check: l10n build analyze rust-test
