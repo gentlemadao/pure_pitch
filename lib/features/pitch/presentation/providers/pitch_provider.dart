@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:typed_data';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
@@ -10,7 +9,6 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:pure_pitch/core/utils/asset_loader.dart';
 import 'package:pure_pitch/features/pitch/domain/models/pitch_state.dart';
 import 'package:pure_pitch/src/rust/api/pitch.dart';
-import 'package:pure_pitch/src/rust/frb_generated.dart';
 
 part 'pitch_provider.g.dart';
 

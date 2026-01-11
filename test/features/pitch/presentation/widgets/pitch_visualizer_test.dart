@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pure_pitch/features/pitch/domain/models/pitch_state.dart';
 import 'package:pure_pitch/features/pitch/presentation/widgets/pitch_visualizer.dart';
 import 'package:pure_pitch/src/rust/api/pitch.dart'; // For NoteEvent
 

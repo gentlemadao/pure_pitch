@@ -6,7 +6,7 @@
 import '../frb_generated.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
-// These functions are ignored because they are not marked as `pub`: `decode_and_resample`
+// These functions are ignored because they are not marked as `pub`: `decode_and_resample`, `preprocess_audio`, `run_inference_internal`
 
 /// Analyze an audio file and return a list of note events.
 Future<List<NoteEvent>> analyzeAudioFile({

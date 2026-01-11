@@ -68,6 +68,9 @@ dev_dependencies:
   riverpod_lint: ^3.1.0
   freezed: ^3.2.3
   intl_utils: ^2.8.13
+  path_provider_platform_interface: ^2.1.2
+  plugin_platform_interface: ^2.1.8
+  riverpod: ^3.1.0
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
