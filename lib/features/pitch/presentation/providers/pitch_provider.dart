@@ -6,6 +6,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:record/record.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import 'package:pure_pitch/core/logger/talker.dart';
 import 'package:pure_pitch/core/utils/asset_loader.dart';
 import 'package:pure_pitch/features/pitch/domain/models/pitch_state.dart';
 import 'package:pure_pitch/src/rust/api/pitch.dart';
@@ -54,7 +55,7 @@ class Pitch extends _$Pitch {
       state = state.copyWith(isAnalyzing: false, analysisResults: noteEvents);
     } catch (e) {
       state = state.copyWith(isAnalyzing: false, errorMessage: e.toString());
-      debugPrint("File analysis failed: $e");
+      talker.error("File analysis failed", e);
     }
   }
 
@@ -67,7 +68,10 @@ class Pitch extends _$Pitch {
   }
 
   Future<void> _startCapture() async {
-    if (await Permission.microphone.request().isGranted) {
+    // Request microphone permission
+    final status = await Permission.microphone.request();
+
+    if (status.isGranted) {
       _recorder ??= AudioRecorder();
 
       try {
@@ -81,9 +85,23 @@ class Pitch extends _$Pitch {
 
         _sub = stream.listen(_processAudioChunk);
 
-        state = state.copyWith(isRecording: true, history: []);
+        state = state.copyWith(
+          isRecording: true,
+          history: [],
+          errorMessage: null,
+        );
       } catch (e) {
-        debugPrint("Start capture failed: $e");
+        talker.error("Start capture failed", e);
+        state = state.copyWith(errorMessage: "Failed to start capture: $e");
+      }
+    } else {
+      talker.warning("Microphone permission denied: $status");
+      state = state.copyWith(
+        errorMessage: "Microphone permission is required to record.",
+      );
+      if (status.isPermanentlyDenied) {
+        // We could open settings here, but better to let UI handle it or just log for now
+        // openAppSettings();
       }
     }
   }
@@ -94,7 +112,7 @@ class Pitch extends _$Pitch {
       await _sub?.cancel();
       _sub = null;
     } catch (e) {
-      debugPrint("Stop capture failed: $e");
+      talker.error("Stop capture failed", e);
     }
     state = state.copyWith(isRecording: false, currentPitch: null);
   }
@@ -147,7 +165,7 @@ class Pitch extends _$Pitch {
         currentPitch: newCurrentPitch,
       );
     } catch (e) {
-      debugPrint("Analysis failed: $e");
+      talker.error("Analysis failed", e);
     }
   }
 }
