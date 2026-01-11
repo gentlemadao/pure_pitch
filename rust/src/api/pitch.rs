@@ -12,11 +12,10 @@ use symphonia::core::codecs::DecoderOptions;
 use symphonia::core::audio::{AudioBufferRef, Signal};
 use rubato::{Resampler, Async, FixedAsync, SincInterpolationParameters, SincInterpolationType, WindowFunction};
 use audioadapter_buffers::owned::InterleavedOwned;
-use ndarray::{Array3, Axis};
+use ndarray::Array3;
 use ort::session::Session;
 use ort::inputs;
 
-use crate::api::dsp::{stft, log_magnitude};
 use crate::api::basic_pitch_postproc::extract_notes;
 
 // Output of offline analysis (Extracted Notes)
@@ -31,6 +30,36 @@ pub struct LivePitch {
     pub hz: f64,
     pub midi_note: i32,
     pub clarity: f32,    // Confidence (0.0 - 1.0)
+}
+
+use std::env;
+
+/// Initialize ORT environment. 
+/// Must be called before any other ORT operations.
+pub fn init_ort() -> Result<()> {
+    #[cfg(target_os = "macos")]
+    {
+        if let Ok(exe_path) = env::current_exe() {
+            // exe is in Contents/MacOS/pure_pitch
+            // dylib is in Contents/Frameworks/rust_lib_pure_pitch.framework/Resources/libonnxruntime.dylib
+            // We need to go up from exe: MacOS -> Contents -> .
+            if let Some(contents) = exe_path.parent().and_then(|p| p.parent()) {
+                 let dylib_path = contents
+                    .join("Frameworks")
+                    .join("rust_lib_pure_pitch.framework")
+                    .join("Resources")
+                    .join("libonnxruntime.dylib");
+                
+                if dylib_path.exists() {
+                     env::set_var("ORT_DYLIB_PATH", dylib_path);
+                } else {
+                    // Fallback or log?
+                    // log::warn!("ONNX Runtime dylib not found at expected path: {:?}", dylib_path);
+                }
+            }
+        }
+    }
+    Ok(())
 }
 
 /// Analyze an audio file and return a list of note events.
@@ -182,7 +211,6 @@ pub fn detect_pitch_live(samples: Vec<f32>, sample_rate: f64) -> Result<LivePitc
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ndarray::Array3;
 
     #[test]
     fn test_preprocess_audio_shape() {
@@ -218,11 +246,11 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
+    // #[ignore]
     fn test_run_inference_internal() {
         let model_path = "../assets/models/basic_pitch.onnx";
         let samples = vec![0.0; 22050 * 3];
-        let result = run_inference_internal(&samples, model_path);
-        // assert!(result.is_ok()); // Ignored
+        let _result = run_inference_internal(&samples, model_path);
+        // assert!(_result.is_ok()); // Ignored
     }
 }
