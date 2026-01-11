@@ -16,7 +16,7 @@ symphonia = { version = "0.5", features = ["mp3", "aac", "wav"] }
 # Resampling
 rubato = "1.0"
 # AI Inference (ONNX Runtime)
-ort = { version = "2.0.0-rc.11", features = ["load-dynamic"] }
+ort = { version = "2.0.0-rc.11" }
 # Math & DSP
 ndarray = "0.17"
 rustfft = "6.4"
