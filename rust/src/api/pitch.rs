@@ -51,7 +51,11 @@ pub fn init_ort() -> Result<()> {
                     .join("libonnxruntime.dylib");
                 
                 if dylib_path.exists() {
-                     env::set_var("ORT_DYLIB_PATH", dylib_path);
+                     // ORT_DYLIB_PATH setting is unsafe because it modifies global environment
+                     // which is not thread-safe. We do this at init time.
+                     unsafe {
+                         env::set_var("ORT_DYLIB_PATH", dylib_path);
+                     }
                 } else {
                     // Fallback or log?
                     // log::warn!("ONNX Runtime dylib not found at expected path: {:?}", dylib_path);
@@ -69,39 +73,65 @@ pub fn analyze_audio_file(audio_path: String, model_path: String) -> Result<Vec<
 }
 
 fn run_inference_internal(samples: &[f32], model_path: &str) -> Result<Vec<NoteEvent>> {
-    let input_tensor = preprocess_audio(samples);
+    let target_len = 43844;
+    let mut all_notes = Vec::new();
     
-    // Convert to ORT Value
-    let input_value = ort::value::Tensor::from_array(input_tensor)?;
-
-    // Load model and run inference
+    // Load model
     let mut session = Session::builder()?.commit_from_file(model_path)?;
-    
-    // Basic Pitch inputs: "input_2" -> [Batch, Time, 1]
-    let outputs = session.run(inputs!["input_2" => input_value])?;
-    
-    // Outputs: "note", "onset", "contour"
-    let (note_shape, note_data) = outputs["note"].try_extract_tensor::<f32>()?;
-    let (onset_shape, onset_data) = outputs["onset"].try_extract_tensor::<f32>()?;
-    // let _contour_tensor = outputs["contour"].try_extract_tensor::<f32>()?;
 
-    // Convert to Array3
-    // shape is &Vec<usize> or &[usize]. ArrayView::from_shape expects shape.
-    // We need to ensure shape is 3D.
-    let note_array = ndarray::ArrayView::from_shape((note_shape[0] as usize, note_shape[1] as usize, note_shape[2] as usize), note_data)?.to_owned();
-    let onset_array = ndarray::ArrayView::from_shape((onset_shape[0] as usize, onset_shape[1] as usize, onset_shape[2] as usize), onset_data)?.to_owned();
+    // Process in chunks
+    // We use a simple non-overlapping sliding window for MVP.
+    // Ideally, we should use overlap and blend.
+    let total_samples = samples.len();
+    let num_chunks = (total_samples + target_len - 1) / target_len;
 
-    let notes = extract_notes(note_array, onset_array);
+    for i in 0..num_chunks {
+        let start = i * target_len;
+        let end = std::cmp::min(start + target_len, total_samples);
+        let chunk_len = end - start;
+        
+        // Prepare padded chunk
+        let mut chunk_data = vec![0.0f32; target_len];
+        chunk_data[..chunk_len].copy_from_slice(&samples[start..end]);
+        
+        let input_tensor = preprocess_chunk(&chunk_data);
+        
+        // Convert to ORT Value
+        let input_value = ort::value::Tensor::from_array(input_tensor)?;
+        
+        // Run inference
+        let outputs = session.run(inputs!["input_2" => input_value])?;
+        
+        // Extract outputs
+        let (note_shape, note_data) = outputs["note"].try_extract_tensor::<f32>()?;
+        let (onset_shape, onset_data) = outputs["onset"].try_extract_tensor::<f32>()?;
+        
+        // Convert to Array3
+        let note_array = ndarray::ArrayView::from_shape((note_shape[0] as usize, note_shape[1] as usize, note_shape[2] as usize), note_data)?.to_owned();
+        let onset_array = ndarray::ArrayView::from_shape((onset_shape[0] as usize, onset_shape[1] as usize, onset_shape[2] as usize), onset_data)?.to_owned();
+        
+        let mut chunk_notes = extract_notes(note_array, onset_array);
+        
+        // Adjust timestamps
+        // Basic Pitch time scale: output frame index -> time?
+        // extract_notes calculates start_time based on frame index.
+        // We need to add the chunk start time offset.
+        let chunk_start_time = start as f64 / 22050.0;
+        for note in &mut chunk_notes {
+            note.start_time += chunk_start_time;
+        }
+        
+        all_notes.extend(chunk_notes);
+    }
 
-    Ok(notes)
+    Ok(all_notes)
 }
 
-fn preprocess_audio(samples: &[f32]) -> Array3<f32> {
+fn preprocess_chunk(chunk: &[f32]) -> Array3<f32> {
+    // Expects chunk to be exactly 43844 length (or whatever target_len is passed, but here we assume caller handles padding)
     // Basic Pitch expects [Batch, Time, Channels] -> [1, N, 1]
-    // And samples should be normalized (Symphonia usually gives normalized f32).
-    // We assume samples are mono.
-    let len = samples.len();
-    let array = ndarray::Array::from_shape_vec((1, len, 1), samples.to_vec()).unwrap(); 
+    let len = chunk.len();
+    let array = ndarray::Array::from_shape_vec((1, len, 1), chunk.to_vec()).unwrap(); 
     array
 }
 
@@ -213,10 +243,10 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_preprocess_audio_shape() {
-        let samples = vec![0.0; 1024];
-        let tensor = preprocess_audio(&samples);
-        assert_eq!(tensor.shape(), &[1, 1024, 1]);
+    fn test_preprocess_chunk_shape() {
+        let samples = vec![0.0; 43844];
+        let tensor = preprocess_chunk(&samples);
+        assert_eq!(tensor.shape(), &[1, 43844, 1]);
     }
 
     #[test]
