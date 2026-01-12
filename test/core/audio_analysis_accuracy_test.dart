@@ -25,12 +25,23 @@ void main() async {
     
     // Initialize ORT
     // We explicitly point to the libonnxruntime.dylib in target/debug
-    final String ortDylibPath;
+    String? ortDylibPath;
     if (Platform.isMacOS) {
-       ortDylibPath = '${Directory.current.path}/rust/target/debug/libonnxruntime.dylib';
-    } else {
-       // Fallback or other OS logic
-       ortDylibPath = '${Directory.current.path}/rust/target/debug/libonnxruntime.so';
+      ortDylibPath =
+          '${Directory.current.path}/rust/target/debug/libonnxruntime.dylib';
+    } else if (Platform.isLinux) {
+      // On Linux CI, it might be in target/debug or target/debug/deps or deep in build/
+      final possiblePaths = [
+        '${Directory.current.path}/rust/target/debug/libonnxruntime.so',
+        '${Directory.current.path}/rust/target/debug/deps/libonnxruntime.so',
+      ];
+
+      for (final path in possiblePaths) {
+        if (File(path).existsSync()) {
+          ortDylibPath = path;
+          break;
+        }
+      }
     }
 
     try {

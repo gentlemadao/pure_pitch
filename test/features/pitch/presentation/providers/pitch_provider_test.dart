@@ -4,6 +4,7 @@ import 'package:riverpod/riverpod.dart';
 import 'package:flutter/services.dart';
 import 'package:path_provider_platform_interface/path_provider_platform_interface.dart';
 import 'package:plugin_platform_interface/plugin_platform_interface.dart';
+import 'package:pure_pitch/src/rust/api/pitch.dart';
 import 'package:pure_pitch/src/rust/frb_generated.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 import 'dart:io';
@@ -34,6 +35,32 @@ void main() {
             '${Directory.current.path}/rust/target/debug/librust_lib_pure_pitch.so';
       }
       await RustLib.init(externalLibrary: ExternalLibrary.open(dylibPath));
+    }
+
+    // Initialize ORT
+    String? ortDylibPath;
+    if (Platform.isMacOS) {
+      ortDylibPath =
+          '${Directory.current.path}/rust/target/debug/libonnxruntime.dylib';
+    } else if (Platform.isLinux) {
+      final possiblePaths = [
+        '${Directory.current.path}/rust/target/debug/libonnxruntime.so',
+        '${Directory.current.path}/rust/target/debug/deps/libonnxruntime.so',
+      ];
+
+      for (final path in possiblePaths) {
+        if (File(path).existsSync()) {
+          ortDylibPath = path;
+          break;
+        }
+      }
+    }
+
+    try {
+      await initOrt(dylibPath: ortDylibPath);
+    } catch (e) {
+      // Ignore errors in provider test if ORT fails to init, 
+      // as some tests might not need it or handles it via state.
     }
   });
 

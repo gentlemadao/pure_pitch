@@ -30,6 +30,9 @@ jobs:
       - name: Generate Rust/Dart Glue Code
         run: flutter_rust_bridge_codegen generate
 
+      - name: Build Rust Library
+        run: cd rust && cargo build
+
       - name: Run Rust tests
         run: cd rust && cargo test
 
