@@ -85,7 +85,7 @@ abstract class RustLibApi extends BaseApi {
     required double sampleRate,
   });
 
-  Future<void> crateApiPitchInitOrt();
+  Future<void> crateApiPitchInitOrt({String? dylibPath});
 }
 
 class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
@@ -167,11 +167,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
-  Future<void> crateApiPitchInitOrt() {
+  Future<void> crateApiPitchInitOrt({String? dylibPath}) {
     return handler.executeNormal(
       NormalTask(
         callFfi: (port_) {
           final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_opt_String(dylibPath, serializer);
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
@@ -184,14 +185,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           decodeErrorData: sse_decode_AnyhowException,
         ),
         constMeta: kCrateApiPitchInitOrtConstMeta,
-        argValues: [],
+        argValues: [dylibPath],
         apiImpl: this,
       ),
     );
   }
 
   TaskConstMeta get kCrateApiPitchInitOrtConstMeta =>
-      const TaskConstMeta(debugName: "init_ort", argNames: []);
+      const TaskConstMeta(debugName: "init_ort", argNames: ["dylibPath"]);
 
   @protected
   AnyhowException dco_decode_AnyhowException(dynamic raw) {
@@ -271,6 +272,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       duration: dco_decode_f_64(arr[1]),
       midiNote: dco_decode_i_32(arr[2]),
     );
+  }
+
+  @protected
+  String? dco_decode_opt_String(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw == null ? null : dco_decode_String(raw);
   }
 
   @protected
@@ -370,6 +377,17 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       duration: var_duration,
       midiNote: var_midiNote,
     );
+  }
+
+  @protected
+  String? sse_decode_opt_String(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    if (sse_decode_bool(deserializer)) {
+      return (sse_decode_String(deserializer));
+    } else {
+      return null;
+    }
   }
 
   @protected
@@ -480,6 +498,16 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_f_64(self.startTime, serializer);
     sse_encode_f_64(self.duration, serializer);
     sse_encode_i_32(self.midiNote, serializer);
+  }
+
+  @protected
+  void sse_encode_opt_String(String? self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    sse_encode_bool(self != null, serializer);
+    if (self != null) {
+      sse_encode_String(self, serializer);
+    }
   }
 
   @protected

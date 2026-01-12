@@ -4,6 +4,8 @@ import 'package:riverpod/riverpod.dart';
 import 'package:flutter/services.dart';
 import 'package:path_provider_platform_interface/path_provider_platform_interface.dart';
 import 'package:plugin_platform_interface/plugin_platform_interface.dart';
+import 'package:pure_pitch/src/rust/frb_generated.dart';
+import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 import 'dart:io';
 
 class MockPathProviderPlatform extends Fake
@@ -17,6 +19,23 @@ class MockPathProviderPlatform extends Fake
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+
+  setUpAll(() async {
+    if (!RustLib.instance.initialized) {
+      final String dylibPath;
+      if (Platform.isMacOS) {
+        dylibPath =
+            '${Directory.current.path}/rust/target/debug/librust_lib_pure_pitch.dylib';
+      } else if (Platform.isWindows) {
+        dylibPath =
+            '${Directory.current.path}/rust/target/debug/rust_lib_pure_pitch.dll';
+      } else {
+        dylibPath =
+            '${Directory.current.path}/rust/target/debug/librust_lib_pure_pitch.so';
+      }
+      await RustLib.init(externalLibrary: ExternalLibrary.open(dylibPath));
+    }
+  });
 
   setUp(() {
     PathProviderPlatform.instance = MockPathProviderPlatform();

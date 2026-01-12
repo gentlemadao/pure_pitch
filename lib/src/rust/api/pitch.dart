@@ -10,7 +10,11 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
 /// Initialize ORT environment.
 /// Must be called before any other ORT operations.
-Future<void> initOrt() => RustLib.instance.api.crateApiPitchInitOrt();
+///
+/// [dylib_path] Optional path to the onnxruntime dynamic library.
+/// If provided, it sets the ORT_DYLIB_PATH environment variable.
+Future<void> initOrt({String? dylibPath}) =>
+    RustLib.instance.api.crateApiPitchInitOrt(dylibPath: dylibPath);
 
 /// Analyze an audio file and return a list of note events.
 Future<List<NoteEvent>> analyzeAudioFile({

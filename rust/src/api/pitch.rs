@@ -36,32 +36,41 @@ use std::env;
 
 /// Initialize ORT environment. 
 /// Must be called before any other ORT operations.
-pub fn init_ort() -> Result<()> {
-    #[cfg(any(target_os = "macos", target_os = "ios"))]
-    {
-        if let Ok(exe_path) = env::current_exe() {
-            let contents = exe_path.parent().unwrap();
-            
-            let dylib_path = if cfg!(target_os = "macos") {
-                // macOS: Contents/Frameworks/rust_lib_pure_pitch.framework/Resources/libonnxruntime.dylib
-                contents.parent().unwrap()
-                    .join("Frameworks")
-                    .join("rust_lib_pure_pitch.framework")
-                    .join("Resources")
-                    .join("libonnxruntime.dylib")
-            } else {
-                // iOS: Frameworks/onnxruntime.framework/onnxruntime
-                contents.join("Frameworks")
-                    .join("onnxruntime.framework")
-                    .join("onnxruntime")
-            };
-            
-            if dylib_path.exists() {
-                 // ORT_DYLIB_PATH setting is unsafe because it modifies global environment
-                 // which is not thread-safe. We do this at init time.
-                 unsafe {
-                     env::set_var("ORT_DYLIB_PATH", dylib_path);
-                 }
+/// 
+/// [dylib_path] Optional path to the onnxruntime dynamic library.
+/// If provided, it sets the ORT_DYLIB_PATH environment variable.
+pub fn init_ort(dylib_path: Option<String>) -> Result<()> {
+    if let Some(path) = dylib_path {
+        unsafe {
+             env::set_var("ORT_DYLIB_PATH", path);
+        }
+    } else {
+        #[cfg(any(target_os = "macos", target_os = "ios"))]
+        {
+            if let Ok(exe_path) = env::current_exe() {
+                let contents = exe_path.parent().unwrap();
+                
+                let dylib_path = if cfg!(target_os = "macos") {
+                    // macOS: Contents/Frameworks/rust_lib_pure_pitch.framework/Resources/libonnxruntime.dylib
+                    contents.parent().unwrap()
+                        .join("Frameworks")
+                        .join("rust_lib_pure_pitch.framework")
+                        .join("Resources")
+                        .join("libonnxruntime.dylib")
+                } else {
+                    // iOS: Frameworks/onnxruntime.framework/onnxruntime
+                    contents.join("Frameworks")
+                        .join("onnxruntime.framework")
+                        .join("onnxruntime")
+                };
+                
+                if dylib_path.exists() {
+                     // ORT_DYLIB_PATH setting is unsafe because it modifies global environment
+                     // which is not thread-safe. We do this at init time.
+                     unsafe {
+                         env::set_var("ORT_DYLIB_PATH", dylib_path);
+                     }
+                }
             }
         }
     }
@@ -176,11 +185,25 @@ fn decode_and_resample(path: &str, target_sample_rate: u32) -> Result<Vec<f32>> 
                     samples.push(sum / buf.spec().channels.count() as f32);
                 }
             },
+            AudioBufferRef::S16(buf) => {
+                for i in 0..buf.frames() {
+                    let mut sum = 0.0;
+                    for chan in 0..buf.spec().channels.count() {
+                        sum += buf.chan(chan)[i] as f32 / 32768.0;
+                    }
+                    samples.push(sum / buf.spec().channels.count() as f32);
+                }
+            },
             _ => {
                 // TODO: Support other bit depths if needed
+                log::warn!("Unsupported audio buffer type");
             }
         }
     }
+    
+    // DEBUG LOGGING
+    let rms = (samples.iter().map(|x| x * x).sum::<f32>() / samples.len() as f32).sqrt();
+    println!("Decoded {} samples, RMS: {}", samples.len(), rms);
 
     if original_sample_rate != target_sample_rate {
         let params = SincInterpolationParameters {
