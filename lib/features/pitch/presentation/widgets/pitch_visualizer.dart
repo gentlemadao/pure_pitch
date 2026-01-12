@@ -7,7 +7,7 @@ class PitchVisualizer extends StatefulWidget {
   final List<TimestampedPitch> history;
   final List<NoteEvent> noteEvents;
   final bool isRecording;
-  final double pixelsPerSecond; // Control timeline zoom
+  final double visibleTimeWindow; 
   final int minNote;
   final int maxNote;
 
@@ -16,7 +16,7 @@ class PitchVisualizer extends StatefulWidget {
     required this.history,
     this.noteEvents = const [],
     this.isRecording = false,
-    this.pixelsPerSecond = 100.0, // Default: 1 second = 100 pixels
+    this.visibleTimeWindow = 5.0,
     this.minNote = 36, // C2
     this.maxNote = 84, // C6
   });
@@ -30,24 +30,25 @@ class _PitchVisualizerState extends State<PitchVisualizer> {
 
   @override
   Widget build(BuildContext context) {
-    // Calculate total width
-    double totalWidth = MediaQuery.of(context).size.width;
-    if (widget.noteEvents.isNotEmpty) {
-      final lastNote = widget.noteEvents.last;
-      totalWidth =
-          (lastNote.startTime + lastNote.duration) * widget.pixelsPerSecond +
-          100;
-    }
-
-    // Auto-scroll to the end if recording
-    if (widget.isRecording && _scrollController.hasClients) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
-      });
-    }
-
     return LayoutBuilder(
       builder: (context, constraints) {
+        final double pixelsPerSecond =
+            constraints.maxWidth / widget.visibleTimeWindow;
+
+        // Calculate total width
+        double totalWidth = constraints.maxWidth;
+        if (widget.noteEvents.isNotEmpty) {
+          final lastNote = widget.noteEvents.last;
+          totalWidth = (lastNote.startTime + lastNote.duration) * pixelsPerSecond + 100;
+        }
+
+        // Auto-scroll to the end if recording
+        if (widget.isRecording && _scrollController.hasClients) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
+          });
+        }
+
         return Container(
           color: const Color(0xFF121212), // Deep background
           child: SingleChildScrollView(
@@ -62,7 +63,8 @@ class _PitchVisualizerState extends State<PitchVisualizer> {
                 history: widget.history,
                 noteEvents: widget.noteEvents,
                 isRecording: widget.isRecording,
-                pixelsPerSecond: widget.pixelsPerSecond,
+                pixelsPerSecond: pixelsPerSecond,
+                visibleTimeWindow: widget.visibleTimeWindow,
                 minNote: widget.minNote,
                 maxNote: widget.maxNote,
                 viewportWidth: constraints.maxWidth,
@@ -80,6 +82,7 @@ class _PitchPainter extends CustomPainter {
   final List<NoteEvent> noteEvents;
   final bool isRecording;
   final double pixelsPerSecond;
+  final double visibleTimeWindow;
   final int minNote;
   final int maxNote;
   final double viewportWidth;
@@ -89,6 +92,7 @@ class _PitchPainter extends CustomPainter {
     required this.noteEvents,
     required this.isRecording,
     required this.pixelsPerSecond,
+    required this.visibleTimeWindow,
     required this.minNote,
     required this.maxNote,
     required this.viewportWidth,
@@ -202,7 +206,7 @@ class _PitchPainter extends CustomPainter {
     // Live pitch drawing logic: X coordinates based on timestamps
     // Most recent point is on the far right
     final now = history.last.time;
-    final windowDurationMs = 5000; // Show last 5 seconds
+    final windowDurationMs = (visibleTimeWindow * 1000).toInt();
 
     for (final point in history) {
       final diffMs = now.difference(point.time).inMilliseconds;

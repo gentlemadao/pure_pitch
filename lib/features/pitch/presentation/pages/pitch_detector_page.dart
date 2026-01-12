@@ -18,6 +18,8 @@ class PitchDetectorPage extends ConsumerStatefulWidget {
 class _PitchDetectorPageState extends ConsumerState<PitchDetectorPage>
     with SingleTickerProviderStateMixin {
   late Ticker _ticker;
+  double? _lastAutoScaledWidth;
+  double _baseWindowOnScaleStart = 5.0;
 
   @override
   void initState() {
@@ -33,6 +35,25 @@ class _PitchDetectorPageState extends ConsumerState<PitchDetectorPage>
   void dispose() {
     _ticker.dispose();
     super.dispose();
+  }
+
+  void _handleResize(double width) {
+    if (_lastAutoScaledWidth == width) return;
+    _lastAutoScaledWidth = width;
+
+    double autoWindow;
+    if (width < 600) {
+      autoWindow = 5.0;
+    } else if (width > 1200) {
+      autoWindow = 10.0;
+    } else {
+      autoWindow = 5.0 + (width - 600) / 600 * 5.0;
+    }
+
+    // Update state after build
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(pitchProvider.notifier).updateVisibleTimeWindow(autoWindow);
+    });
   }
 
   @override
@@ -70,15 +91,46 @@ class _PitchDetectorPageState extends ConsumerState<PitchDetectorPage>
           ),
         ],
       ),
-      body: Stack(
-        children: [
-          Positioned.fill(
-            child: PitchVisualizer(
-              history: pitchState.history,
-              noteEvents: pitchState.analysisResults,
-              isRecording: isRecording,
-            ),
-          ),
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          _handleResize(constraints.maxWidth);
+
+          return Stack(
+            children: [
+              Positioned.fill(
+                child: GestureDetector(
+                  onScaleStart: (details) {
+                    _baseWindowOnScaleStart =
+                        ref.read(pitchProvider).visibleTimeWindow;
+                  },
+                  onScaleUpdate: (details) {
+                    if (details.scale == 1.0) return;
+                    // scale > 1 means zoom in -> smaller window
+                    final newWindow = _baseWindowOnScaleStart / details.scale;
+                    ref
+                        .read(pitchProvider.notifier)
+                        .updateVisibleTimeWindow(newWindow);
+                  },
+                  child: TweenAnimationBuilder<double>(
+                    duration: const Duration(milliseconds: 300),
+                    curve: Curves.easeOutCubic,
+                    tween: Tween<double>(
+                      begin: pitchState.visibleTimeWindow,
+                      end: pitchState.visibleTimeWindow,
+                    ),
+                    builder: (context, value, child) {
+                      return PitchVisualizer(
+                        history: pitchState.history,
+                        noteEvents: pitchState.analysisResults,
+                        isRecording: isRecording,
+                        visibleTimeWindow: value,
+                      );
+                    },
+                  ),
+                ),
+              ),
+// ... rest of the build method stays similar, but I need to make sure I don't break the Stack structure.
+// I will apply the change more precisely below.
 
           if (pitchState.isAnalyzing)
             Center(
@@ -159,28 +211,58 @@ class _PitchDetectorPageState extends ConsumerState<PitchDetectorPage>
             ),
           ),
 
-          Positioned(
-            bottom: 50,
-            left: 0,
-            right: 0,
-            child: Center(
-              child: isRecording
-                  ? FloatingActionButton.large(
-                      onPressed: () =>
-                          ref.read(pitchProvider.notifier).toggleCapture(),
-                      backgroundColor: Colors.redAccent,
-                      child: const Icon(Icons.stop),
-                    )
-                  : FloatingActionButton.large(
-                      onPressed: () =>
-                          ref.read(pitchProvider.notifier).toggleCapture(),
-                      backgroundColor: Colors.cyanAccent,
-                      child: const Icon(Icons.mic, color: Colors.black),
+                    Positioned(
+                      bottom: 50,
+                      left: 0,
+                      right: 0,
+                      child: Center(
+                        child: isRecording
+                            ? FloatingActionButton.large(
+                                onPressed: () =>
+                                    ref.read(pitchProvider.notifier).toggleCapture(),
+                                backgroundColor: Colors.redAccent,
+                                child: const Icon(Icons.stop),
+                              )
+                            : FloatingActionButton.large(
+                                onPressed: () =>
+                                    ref.read(pitchProvider.notifier).toggleCapture(),
+                                backgroundColor: Colors.cyanAccent,
+                                child: const Icon(Icons.mic, color: Colors.black),
+                              ),
+                      ),
                     ),
+          
+                    // Zoom Controls
+                    Positioned(
+                      right: 20,
+                      bottom: 120,
+                      child: Column(
+                        children: [
+                          FloatingActionButton.small(
+                            onPressed: () {
+                              ref
+                                  .read(pitchProvider.notifier)
+                                  .updateVisibleTimeWindow(pitchState.visibleTimeWindow - 1.0);
+                            },
+                            heroTag: 'zoom_in',
+                            child: const Icon(Icons.zoom_in),
+                          ),
+                          const SizedBox(height: 10),
+                          FloatingActionButton.small(
+                            onPressed: () {
+                              ref
+                                  .read(pitchProvider.notifier)
+                                  .updateVisibleTimeWindow(pitchState.visibleTimeWindow + 1.0);
+                            },
+                            heroTag: 'zoom_out',
+                            child: const Icon(Icons.zoom_out),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                );
+              },
             ),
-          ),
-        ],
-      ),
-    );
-  }
+          );  }
 }

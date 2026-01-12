@@ -200,10 +200,6 @@ fn decode_and_resample(path: &str, target_sample_rate: u32) -> Result<Vec<f32>> 
             }
         }
     }
-    
-    // DEBUG LOGGING
-    let rms = (samples.iter().map(|x| x * x).sum::<f32>() / samples.len() as f32).sqrt();
-    println!("Decoded {} samples, RMS: {}", samples.len(), rms);
 
     if original_sample_rate != target_sample_rate {
         let params = SincInterpolationParameters {
@@ -213,11 +209,13 @@ fn decode_and_resample(path: &str, target_sample_rate: u32) -> Result<Vec<f32>> 
             window: WindowFunction::BlackmanHarris2,
             oversampling_factor: 256,
         };
+        
+        let chunk_size = samples.len();
         let mut resampler = Async::<f32>::new_sinc(
             target_sample_rate as f64 / original_sample_rate as f64,
             2.0,
             &params,
-            1024,
+            chunk_size,
             1,
             FixedAsync::Input,
         )?;

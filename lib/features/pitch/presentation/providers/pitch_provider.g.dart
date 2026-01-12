@@ -40,7 +40,7 @@ final class PitchProvider extends $NotifierProvider<Pitch, PitchState> {
   }
 }
 
-String _$pitchHash() => r'35e93be258379d92d9edb200ec2dd13028da01ef';
+String _$pitchHash() => r'f9ee8c38657010a4df5b20262e16df0c8b898f39';
 
 abstract class _$Pitch extends $Notifier<PitchState> {
   PitchState build();

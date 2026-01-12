@@ -113,15 +113,18 @@ void main() async {
       final noteSamples = AudioGenerator.generateSawtoothWave(
         frequency: freq,
         duration: 0.5, // 0.5s per note
-        sampleRate: 22050,
+        sampleRate: 44100,
       ).map((s) => s * 0.5).toList();
+      
+      // Adjust silence length for 44100
+      final silence = List<double>.filled(8000, 0.0);
       
       samples.addAll(silence);
       samples.addAll(noteSamples);
     }
     samples.addAll(silence);
 
-    final bytes = AudioGenerator.encodeWav(samples, sampleRate: 22050);
+    final bytes = AudioGenerator.encodeWav(samples, sampleRate: 44100);
     final tempFile = File('${Directory.systemTemp.path}/test_c_major.wav');
     await tempFile.writeAsBytes(bytes);
 
@@ -141,6 +144,15 @@ void main() async {
     final f1 = AccuracyMetrics.calculateF1Score(notes, detectedNotes);
     print('C Major Scale F1 Score: $f1');
     
+    // Check total duration
+    if (detectedNotes.isNotEmpty) {
+      final lastNote = detectedNotes.last;
+      final analyzedDuration = lastNote.startTime + lastNote.duration;
+      print('Analyzed Duration: $analyzedDuration s');
+      // The generated audio is roughly 8 * (0.5+0.1) = 4.8s + padding
+      expect(analyzedDuration, greaterThan(4.0), reason: 'Analysis should cover most of the audio file');
+    }
+
     // We expect at least one detection for each played note
     for (final expectedMidi in notes) {
       final found = detectedNotes.any((n) => (n.midiNote - expectedMidi).abs() <= 1);

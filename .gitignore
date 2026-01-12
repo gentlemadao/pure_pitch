@@ -49,3 +49,4 @@ app.*.map.json
 libonnxruntime.dylib
 rust_builder/macos/libonnxruntime.dylib
 assets/models/
+temp/

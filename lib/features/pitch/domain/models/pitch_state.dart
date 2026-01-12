@@ -22,5 +22,6 @@ abstract class PitchState with _$PitchState {
     @Default([]) List<TimestampedPitch> history,
     @Default([]) List<NoteEvent> analysisResults,
     String? errorMessage,
+    @Default(5.0) double visibleTimeWindow,
   }) = _PitchState;
 }
