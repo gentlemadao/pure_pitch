@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:talker_flutter/talker_flutter.dart';
+
+import 'package:pure_pitch/core/extensions/context_extension.dart';
+import 'package:pure_pitch/core/logger/talker.dart';
 import 'package:pure_pitch/features/pitch/presentation/providers/pitch_provider.dart';
 import 'package:pure_pitch/features/pitch/presentation/widgets/pitch_visualizer.dart';
 
@@ -48,12 +52,21 @@ class _PitchDetectorPageState extends ConsumerState<PitchDetectorPage>
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Pure Pitch Detector'),
+        title: Text(context.l10n.appTitle),
         actions: [
           IconButton(
             onPressed: () => ref.read(pitchProvider.notifier).analyzeFile(),
             icon: const Icon(Icons.audio_file),
-            tooltip: "Analyze Audio File",
+            tooltip: context.l10n.analyzeAudioFile,
+          ),
+          IconButton(
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (context) => TalkerScreen(talker: talker),
+              ),
+            ),
+            icon: const Icon(Icons.bug_report),
+            tooltip: context.l10n.viewLogs,
           ),
         ],
       ),
@@ -63,22 +76,41 @@ class _PitchDetectorPageState extends ConsumerState<PitchDetectorPage>
             child: PitchVisualizer(
               history: pitchState.history,
               noteEvents: pitchState.analysisResults,
-              timeWindowSeconds: 5.0,
+              isRecording: isRecording,
             ),
           ),
 
           if (pitchState.isAnalyzing)
-            const Center(
+            Center(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  CircularProgressIndicator(color: Colors.cyanAccent),
-                  SizedBox(height: 10),
+                  const CircularProgressIndicator(color: Colors.cyanAccent),
+                  const SizedBox(height: 10),
                   Text(
-                    "Analyzing audio...",
-                    style: TextStyle(color: Colors.cyanAccent),
+                    context.l10n.analyzingAudio,
+                    style: const TextStyle(color: Colors.cyanAccent),
                   ),
                 ],
+              ),
+            ),
+
+          if (pitchState.errorMessage != null)
+            Positioned(
+              top: 100,
+              left: 20,
+              right: 20,
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.redAccent.withValues(alpha: 0.8),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  pitchState.errorMessage!,
+                  style: const TextStyle(color: Colors.white),
+                  textAlign: TextAlign.center,
+                ),
               ),
             ),
 
@@ -100,7 +132,7 @@ class _PitchDetectorPageState extends ConsumerState<PitchDetectorPage>
                     child: Column(
                       children: [
                         Text(
-                          "${currentPitch.hz.toStringAsFixed(1)} Hz",
+                          context.l10n.hz(currentPitch.hz.toStringAsFixed(1)),
                           style: Theme.of(context).textTheme.displayMedium
                               ?.copyWith(
                                 fontWeight: FontWeight.bold,
@@ -108,7 +140,7 @@ class _PitchDetectorPageState extends ConsumerState<PitchDetectorPage>
                               ),
                         ),
                         Text(
-                          "MIDI: ${currentPitch.midiNote}",
+                          context.l10n.midi(currentPitch.midiNote),
                           style: Theme.of(
                             context,
                           ).textTheme.titleLarge?.copyWith(color: Colors.white),
@@ -118,9 +150,9 @@ class _PitchDetectorPageState extends ConsumerState<PitchDetectorPage>
                   ),
                 ] else if (!isRecording) ...[
                   const SizedBox(height: 100),
-                  const Text(
-                    "Ready to Record",
-                    style: TextStyle(fontSize: 24, color: Colors.white54),
+                  Text(
+                    context.l10n.readyToRecord,
+                    style: const TextStyle(fontSize: 24, color: Colors.white54),
                   ),
                 ],
               ],

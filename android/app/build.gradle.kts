@@ -28,6 +28,14 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+
+        ndk {
+            abiFilters += listOf("arm64-v8a")
+        }
+    }
+
+    dependencies {
+        implementation("com.microsoft.onnxruntime:onnxruntime-android:1.23.2")
     }
 
     buildTypes {

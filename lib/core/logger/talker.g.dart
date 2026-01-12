@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'router.dart';
+part of 'talker.dart';
 
 // **************************************************************************
 // RiverpodGenerator
@@ -9,43 +9,43 @@ part of 'router.dart';
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
 
-@ProviderFor(goRouter)
-final goRouterProvider = GoRouterProvider._();
+@ProviderFor(talkerInstance)
+final talkerInstanceProvider = TalkerInstanceProvider._();
 
-final class GoRouterProvider
-    extends $FunctionalProvider<GoRouter, GoRouter, GoRouter>
-    with $Provider<GoRouter> {
-  GoRouterProvider._()
+final class TalkerInstanceProvider
+    extends $FunctionalProvider<Talker, Talker, Talker>
+    with $Provider<Talker> {
+  TalkerInstanceProvider._()
     : super(
         from: null,
         argument: null,
         retry: null,
-        name: r'goRouterProvider',
+        name: r'talkerInstanceProvider',
         isAutoDispose: true,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
 
   @override
-  String debugGetCreateSourceHash() => _$goRouterHash();
+  String debugGetCreateSourceHash() => _$talkerInstanceHash();
 
   @$internal
   @override
-  $ProviderElement<GoRouter> $createElement($ProviderPointer pointer) =>
+  $ProviderElement<Talker> $createElement($ProviderPointer pointer) =>
       $ProviderElement(pointer);
 
   @override
-  GoRouter create(Ref ref) {
-    return goRouter(ref);
+  Talker create(Ref ref) {
+    return talkerInstance(ref);
   }
 
   /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(GoRouter value) {
+  Override overrideWithValue(Talker value) {
     return $ProviderOverride(
       origin: this,
-      providerOverride: $SyncValueProvider<GoRouter>(value),
+      providerOverride: $SyncValueProvider<Talker>(value),
     );
   }
 }
 
-String _$goRouterHash() => r'034313423be459aadcc8499f101c1cdb2a26a9ee';
+String _$talkerInstanceHash() => r'263ebe8f145eaf64d024088b68bbd0acfddd4719';

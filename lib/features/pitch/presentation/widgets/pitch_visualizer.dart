@@ -1,12 +1,13 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
-import 'package:pure_pitch/features/pitch/domain/models/pitch_state.dart';
 import 'package:pure_pitch/src/rust/api/pitch.dart';
+import 'package:pure_pitch/features/pitch/domain/models/pitch_state.dart';
 
-class PitchVisualizer extends StatelessWidget {
+class PitchVisualizer extends StatefulWidget {
   final List<TimestampedPitch> history;
   final List<NoteEvent> noteEvents;
-  final double timeWindowSeconds;
+  final bool isRecording;
+  final double pixelsPerSecond; // Control timeline zoom
   final int minNote;
   final int maxNote;
 
@@ -14,29 +15,62 @@ class PitchVisualizer extends StatelessWidget {
     super.key,
     required this.history,
     this.noteEvents = const [],
-    this.timeWindowSeconds = 5.0,
+    this.isRecording = false,
+    this.pixelsPerSecond = 100.0, // Default: 1 second = 100 pixels
     this.minNote = 36, // C2
     this.maxNote = 84, // C6
   });
 
   @override
+  State<PitchVisualizer> createState() => _PitchVisualizerState();
+}
+
+class _PitchVisualizerState extends State<PitchVisualizer> {
+  final ScrollController _scrollController = ScrollController();
+
+  @override
   Widget build(BuildContext context) {
-    return ClipRect(
-      child: Container(
-        color: const Color(
-          0xFF1E1E1E,
-        ), // Dark background like typical DAW/Karaoke
-        child: CustomPaint(
-          painter: _PitchPainter(
-            history: history,
-            noteEvents: noteEvents,
-            timeWindowSeconds: timeWindowSeconds,
-            minNote: minNote,
-            maxNote: maxNote,
+    // Calculate total width
+    double totalWidth = MediaQuery.of(context).size.width;
+    if (widget.noteEvents.isNotEmpty) {
+      final lastNote = widget.noteEvents.last;
+      totalWidth =
+          (lastNote.startTime + lastNote.duration) * widget.pixelsPerSecond +
+          100;
+    }
+
+    // Auto-scroll to the end if recording
+    if (widget.isRecording && _scrollController.hasClients) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
+      });
+    }
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return Container(
+          color: const Color(0xFF121212), // Deep background
+          child: SingleChildScrollView(
+            controller: _scrollController,
+            scrollDirection: Axis.horizontal,
+            child: CustomPaint(
+              size: Size(
+                max(totalWidth, constraints.maxWidth),
+                constraints.maxHeight,
+              ),
+              painter: _PitchPainter(
+                history: widget.history,
+                noteEvents: widget.noteEvents,
+                isRecording: widget.isRecording,
+                pixelsPerSecond: widget.pixelsPerSecond,
+                minNote: widget.minNote,
+                maxNote: widget.maxNote,
+                viewportWidth: constraints.maxWidth,
+              ),
+            ),
           ),
-          size: Size.infinite,
-        ),
-      ),
+        );
+      },
     );
   }
 }
@@ -44,131 +78,113 @@ class PitchVisualizer extends StatelessWidget {
 class _PitchPainter extends CustomPainter {
   final List<TimestampedPitch> history;
   final List<NoteEvent> noteEvents;
-  final double timeWindowSeconds;
+  final bool isRecording;
+  final double pixelsPerSecond;
   final int minNote;
   final int maxNote;
+  final double viewportWidth;
 
   _PitchPainter({
     required this.history,
     required this.noteEvents,
-    required this.timeWindowSeconds,
+    required this.isRecording,
+    required this.pixelsPerSecond,
     required this.minNote,
     required this.maxNote,
+    required this.viewportWidth,
   });
 
   @override
   void paint(Canvas canvas, Size size) {
-    final now = DateTime.now();
-    final windowDuration = Duration(
-      milliseconds: (timeWindowSeconds * 1000).toInt(),
-    );
-    final startTime = now.subtract(windowDuration);
-
     _drawGrid(canvas, size);
-    _drawNoteEvents(canvas, size); // Draw offline notes first (layering)
-    _drawPitchCurve(canvas, size, startTime, now);
+
+    if (noteEvents.isNotEmpty) {
+      _drawNoteEvents(canvas, size);
+    }
+
+    if (isRecording && history.isNotEmpty) {
+      _drawLivePitch(canvas, size);
+    }
   }
 
   void _drawGrid(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = Colors.white.withValues(alpha: 0.1)
-      ..strokeWidth = 1.0;
+    final linePaint = Paint()
+      ..color = Colors.white.withValues(alpha: 0.05)
+      ..strokeWidth = 0.5;
 
-    final textPainter = TextPainter(textDirection: TextDirection.ltr);
+    final octavePaint = Paint()
+      ..color = Colors.white.withValues(alpha: 0.15)
+      ..strokeWidth = 1.0;
 
     final noteRange = maxNote - minNote;
     final heightPerNote = size.height / noteRange;
 
     for (int i = minNote; i <= maxNote; i++) {
-      // Draw line for every C note (octave)
-      final isC = (i % 12) == 0;
-      if (isC) {
-        paint.color = Colors.white.withValues(alpha: 0.2);
-        paint.strokeWidth = 1.0;
-      } else {
-        paint.color = Colors.white.withValues(alpha: 0.05);
-        paint.strokeWidth = 0.5;
-      }
-
       final y = size.height - ((i - minNote) * heightPerNote);
-      canvas.drawLine(Offset(0, y), Offset(size.width, y), paint);
+      final isC = (i % 12) == 0;
+
+      canvas.drawLine(
+        Offset(0, y),
+        Offset(size.width, y),
+        isC ? octavePaint : linePaint,
+      );
 
       if (isC) {
-        textPainter.text = TextSpan(
-          text: 'C${(i / 12).floor() - 1}',
-          style: TextStyle(
-            color: Colors.white.withValues(alpha: 0.5),
-            fontSize: 10,
+        final textPainter = TextPainter(
+          text: TextSpan(
+            text: 'C${(i / 12).floor() - 1}',
+            style: TextStyle(color: Colors.white38, fontSize: 10),
           ),
-        );
-        textPainter.layout();
+          textDirection: TextDirection.ltr,
+        )..layout();
         textPainter.paint(canvas, Offset(5, y - textPainter.height / 2));
       }
     }
   }
 
   void _drawNoteEvents(Canvas canvas, Size size) {
-    if (noteEvents.isEmpty) return;
-
-    final paint = Paint()
-      ..color = Colors.orangeAccent.withValues(alpha: 0.6)
-      ..style = PaintingStyle.fill;
-
     final noteRange = maxNote - minNote;
     final heightPerNote = size.height / noteRange;
 
-    // For offline analysis, we visualize the whole file.
-    // But PitchVisualizer is currently time-windowed for real-time.
-    // If we want to show offline results, we probably need a different mode or map time differently.
-    // Assuming for now we show them if they fall into the window?
-    // Or if this is purely offline viewer, we might want to scroll.
-    // Given the task is "Update PitchVisualizer to render NoteEvents", let's assume we map them to the same scale.
-    // But NoteEvents are absolute time from start of file (0.0).
-    // Real-time history is DateTime.
-    // This implies we need a way to align them.
-    // If we are "playing" the file, we have a current play time.
-    // For this MVP step, let's just render them relative to 0.0 -> Total Duration,
-    // BUT PitchVisualizer is `startTime` to `now`.
-    // This suggests PitchVisualizer needs to know if we are in "Real-time" or "Playback" mode.
-
-    // For simplicity, let's just draw them if they fit in the view assuming "now" corresponds to some playback head?
-    // Since we don't have playback yet, let's just map them to the full width if we pass a different time window?
-    // Or just simple visualization: Scale total duration to width?
-
-    // Let's implement a simple "Fit to Screen" logic if history is empty?
-    // Or just iterate and draw.
-
-    // We will assume 1 pixel = X seconds? No, widthPerMs.
-    // If we are in offline mode, `history` might be empty?
-
-    // Let's assume we map NoteEvents relative to the start of the visualization window.
-    // But we don't have "start of visualization window" for file viewing yet.
-
-    // Simplification: Just draw them assuming X axis is 0 to max(note.end).
-
-    double maxTime = 0;
-    if (noteEvents.isNotEmpty) {
-      maxTime = noteEvents.last.startTime + noteEvents.last.duration;
-    }
-    if (maxTime == 0) return;
-
-    final widthPerSec = size.width / maxTime;
-
     for (final note in noteEvents) {
-      final x = note.startTime * widthPerSec;
-      final w = note.duration * widthPerSec;
-      final y = size.height - ((note.midiNote - minNote) * heightPerNote);
+      final x = note.startTime * pixelsPerSecond;
+      final w = note.duration * pixelsPerSecond;
+      final y = size.height - ((note.midiNote - minNote + 1) * heightPerNote);
 
-      canvas.drawRect(Rect.fromLTWH(x, y, w, heightPerNote), paint);
+      // Draw note rectangle
+      final rect = RRect.fromRectAndRadius(
+        Rect.fromLTWH(x, y + 2, w, heightPerNote - 4),
+        const Radius.circular(4),
+      );
+
+      // Gradient fill
+      final paint = Paint()
+        ..shader = LinearGradient(
+          colors: [Colors.orangeAccent, Colors.deepOrange],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+        ).createShader(rect.outerRect)
+        ..style = PaintingStyle.fill;
+
+      // Shadow
+      canvas.drawRRect(
+        rect.shift(const Offset(1, 1)),
+        Paint()..color = Colors.black45,
+      );
+      canvas.drawRRect(rect, paint);
+
+      // Border highlight
+      canvas.drawRRect(
+        rect,
+        Paint()
+          ..color = Colors.white24
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1,
+      );
     }
   }
 
-  void _drawPitchCurve(
-    Canvas canvas,
-    Size size,
-    DateTime startTime,
-    DateTime endTime,
-  ) {
+  void _drawLivePitch(Canvas canvas, Size size) {
     if (history.isEmpty) return;
 
     final paint = Paint()
@@ -182,27 +198,26 @@ class _PitchPainter extends CustomPainter {
 
     final noteRange = maxNote - minNote;
     final heightPerNote = size.height / noteRange;
-    final widthPerMs =
-        size.width / (endTime.difference(startTime).inMilliseconds);
 
-    final visiblePoints = history
-        .where((p) => p.time.isAfter(startTime))
-        .toList();
+    // Live pitch drawing logic: X coordinates based on timestamps
+    // Most recent point is on the far right
+    final now = history.last.time;
+    final windowDurationMs = 5000; // Show last 5 seconds
 
-    for (var i = 0; i < visiblePoints.length; i++) {
-      final point = visiblePoints[i];
+    for (final point in history) {
+      final diffMs = now.difference(point.time).inMilliseconds;
+      if (diffMs > windowDurationMs) continue;
 
-      final timeOffset = point.time.difference(startTime).inMilliseconds;
-      final x = timeOffset * widthPerMs;
+      // X coordinate: offset from right to left
+      final x = size.width - (diffMs / 1000.0 * pixelsPerSecond);
 
       double fractionalMidi = point.midiNote.toDouble();
       if (point.hz > 0) {
         fractionalMidi = 69 + 12 * (log(point.hz / 440.0) / log(2));
       }
-
       final y = size.height - ((fractionalMidi - minNote) * heightPerNote);
 
-      if (point.clarity < 0.3) {
+      if (point.clarity < 0.4) {
         isFirst = true;
         continue;
       }
@@ -214,35 +229,25 @@ class _PitchPainter extends CustomPainter {
         path.lineTo(x, y);
       }
     }
-
     canvas.drawPath(path, paint);
 
-    if (visiblePoints.isNotEmpty) {
-      final last = visiblePoints.last;
-      if (last.clarity >= 0.3) {
-        final timeOffset = last.time.difference(startTime).inMilliseconds;
-        final x = timeOffset * widthPerMs;
-
-        double fractionalMidi = last.midiNote.toDouble();
-        if (last.hz > 0) {
-          fractionalMidi = 69 + 12 * (log(last.hz / 440.0) / log(2));
-        }
-        final y = size.height - ((fractionalMidi - minNote) * heightPerNote);
-
-        canvas.drawCircle(
-          Offset(x, y),
-          6,
-          Paint()
-            ..color = Colors.cyanAccent.withValues(alpha: 0.5)
-            ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 5),
-        );
-        canvas.drawCircle(Offset(x, y), 4, Paint()..color = Colors.white);
-      }
+    // Draw current cursor point
+    final last = history.last;
+    if (last.clarity >= 0.4) {
+      final y = size.height - ((last.midiNote - minNote) * heightPerNote);
+      canvas.drawCircle(
+        Offset(size.width, y),
+        5,
+        Paint()..color = Colors.white,
+      );
+      canvas.drawCircle(
+        Offset(size.width, y),
+        8,
+        Paint()..color = Colors.cyanAccent.withValues(alpha: 0.3),
+      );
     }
   }
 
   @override
-  bool shouldRepaint(covariant _PitchPainter oldDelegate) {
-    return true;
-  }
+  bool shouldRepaint(covariant _PitchPainter oldDelegate) => true;
 }

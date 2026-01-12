@@ -37,29 +37,31 @@ use std::env;
 /// Initialize ORT environment. 
 /// Must be called before any other ORT operations.
 pub fn init_ort() -> Result<()> {
-    #[cfg(target_os = "macos")]
+    #[cfg(any(target_os = "macos", target_os = "ios"))]
     {
         if let Ok(exe_path) = env::current_exe() {
-            // exe is in Contents/MacOS/pure_pitch
-            // dylib is in Contents/Frameworks/rust_lib_pure_pitch.framework/Resources/libonnxruntime.dylib
-            // We need to go up from exe: MacOS -> Contents -> .
-            if let Some(contents) = exe_path.parent().and_then(|p| p.parent()) {
-                 let dylib_path = contents
+            let contents = exe_path.parent().unwrap();
+            
+            let dylib_path = if cfg!(target_os = "macos") {
+                // macOS: Contents/Frameworks/rust_lib_pure_pitch.framework/Resources/libonnxruntime.dylib
+                contents.parent().unwrap()
                     .join("Frameworks")
                     .join("rust_lib_pure_pitch.framework")
                     .join("Resources")
-                    .join("libonnxruntime.dylib");
-                
-                if dylib_path.exists() {
-                     // ORT_DYLIB_PATH setting is unsafe because it modifies global environment
-                     // which is not thread-safe. We do this at init time.
-                     unsafe {
-                         env::set_var("ORT_DYLIB_PATH", dylib_path);
-                     }
-                } else {
-                    // Fallback or log?
-                    // log::warn!("ONNX Runtime dylib not found at expected path: {:?}", dylib_path);
-                }
+                    .join("libonnxruntime.dylib")
+            } else {
+                // iOS: Frameworks/onnxruntime.framework/onnxruntime
+                contents.join("Frameworks")
+                    .join("onnxruntime.framework")
+                    .join("onnxruntime")
+            };
+            
+            if dylib_path.exists() {
+                 // ORT_DYLIB_PATH setting is unsafe because it modifies global environment
+                 // which is not thread-safe. We do this at init time.
+                 unsafe {
+                     env::set_var("ORT_DYLIB_PATH", dylib_path);
+                 }
             }
         }
     }
@@ -95,6 +97,11 @@ fn run_inference_internal(samples: &[f32], model_path: &str) -> Result<Vec<NoteE
         chunk_data[..chunk_len].copy_from_slice(&samples[start..end]);
         
         let input_tensor = preprocess_chunk(&chunk_data);
+        
+        // Debug check
+        if i == 0 {
+            log::info!("Input tensor shape: {:?}", input_tensor.shape());
+        }
         
         // Convert to ORT Value
         let input_value = ort::value::Tensor::from_array(input_tensor)?;

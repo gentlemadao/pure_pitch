@@ -12,7 +12,8 @@ Future<void> bootstrap() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // Catch Flutter errors
-  FlutterError.onError = (details) => talker.handle(details.exception, details.stack);
+  FlutterError.onError = (details) =>
+      talker.handle(details.exception, details.stack);
 
   // Catch Platform errors
   PlatformDispatcher.instance.onError = (error, stack) {
@@ -26,7 +27,16 @@ Future<void> bootstrap() async {
   runApp(
     ProviderScope(
       observers: [
-        TalkerRiverpodObserver(talker: talker),
+        TalkerRiverpodObserver(
+          talker: talker,
+          settings: TalkerRiverpodLoggerSettings(
+            providerFilter: (provider) {
+              final name = provider.name;
+              // Ignore high-frequency updates from the pitch provider
+              return name != 'pitchProvider';
+            },
+          ),
+        ),
       ],
       child: const App(),
     ),

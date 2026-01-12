@@ -53,6 +53,61 @@ class S {
   static S? maybeOf(BuildContext context) {
     return Localizations.of<S>(context, S);
   }
+
+  /// `Pure Pitch Detector`
+  String get appTitle {
+    return Intl.message(
+      'Pure Pitch Detector',
+      name: 'appTitle',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Analyze Audio File`
+  String get analyzeAudioFile {
+    return Intl.message(
+      'Analyze Audio File',
+      name: 'analyzeAudioFile',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `View Logs`
+  String get viewLogs {
+    return Intl.message('View Logs', name: 'viewLogs', desc: '', args: []);
+  }
+
+  /// `Analyzing audio...`
+  String get analyzingAudio {
+    return Intl.message(
+      'Analyzing audio...',
+      name: 'analyzingAudio',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Ready to Record`
+  String get readyToRecord {
+    return Intl.message(
+      'Ready to Record',
+      name: 'readyToRecord',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `{value} Hz`
+  String hz(String value) {
+    return Intl.message('$value Hz', name: 'hz', desc: '', args: [value]);
+  }
+
+  /// `MIDI: {value}`
+  String midi(int value) {
+    return Intl.message('MIDI: $value', name: 'midi', desc: '', args: [value]);
+  }
 }
 
 class AppLocalizationDelegate extends LocalizationsDelegate<S> {

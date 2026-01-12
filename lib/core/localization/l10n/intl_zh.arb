@@ -1,3 +1,24 @@
 {
-  "@@locale": "zh"
+  "@@locale": "zh",
+  "appTitle": "Pure Pitch 检测器",
+  "analyzeAudioFile": "分析音频文件",
+  "viewLogs": "查看日志",
+  "analyzingAudio": "正在分析音频...",
+  "readyToRecord": "准备就绪",
+  "hz": "{value} Hz",
+  "@hz": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "midi": "MIDI: {value}",
+  "@midi": {
+    "placeholders": {
+      "value": {
+        "type": "int"
+      }
+    }
+  }
 }

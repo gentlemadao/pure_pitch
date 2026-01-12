@@ -6,7 +6,11 @@
 import '../frb_generated.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
-// These functions are ignored because they are not marked as `pub`: `decode_and_resample`, `preprocess_audio`, `run_inference_internal`
+// These functions are ignored because they are not marked as `pub`: `decode_and_resample`, `preprocess_chunk`, `run_inference_internal`
+
+/// Initialize ORT environment.
+/// Must be called before any other ORT operations.
+Future<void> initOrt() => RustLib.instance.api.crateApiPitchInitOrt();
 
 /// Analyze an audio file and return a list of note events.
 Future<List<NoteEvent>> analyzeAudioFile({

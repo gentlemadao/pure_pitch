@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:record/record.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -68,12 +67,13 @@ class Pitch extends _$Pitch {
   }
 
   Future<void> _startCapture() async {
-    // Request microphone permission
-    final status = await Permission.microphone.request();
+    _recorder ??= AudioRecorder();
 
-    if (status.isGranted) {
-      _recorder ??= AudioRecorder();
+    // Request microphone permission using the recorder's own method
+    // which works more reliably across all platforms (macOS/iOS/Android/Windows/Linux).
+    final hasPermission = await _recorder!.hasPermission();
 
+    if (hasPermission) {
       try {
         final stream = await _recorder!.startStream(
           const RecordConfig(
@@ -95,14 +95,10 @@ class Pitch extends _$Pitch {
         state = state.copyWith(errorMessage: "Failed to start capture: $e");
       }
     } else {
-      talker.warning("Microphone permission denied: $status");
+      talker.warning("Microphone permission denied");
       state = state.copyWith(
         errorMessage: "Microphone permission is required to record.",
       );
-      if (status.isPermanentlyDenied) {
-        // We could open settings here, but better to let UI handle it or just log for now
-        // openAppSettings();
-      }
     }
   }
 

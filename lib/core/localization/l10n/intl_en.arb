@@ -1,3 +1,24 @@
 {
-  "@@locale": "en"
+  "@@locale": "en",
+  "appTitle": "Pure Pitch Detector",
+  "analyzeAudioFile": "Analyze Audio File",
+  "viewLogs": "View Logs",
+  "analyzingAudio": "Analyzing audio...",
+  "readyToRecord": "Ready to Record",
+  "hz": "{value} Hz",
+  "@hz": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "midi": "MIDI: {value}",
+  "@midi": {
+    "placeholders": {
+      "value": {
+        "type": "int"
+      }
+    }
+  }
 }

@@ -20,6 +20,22 @@ typedef String MessageIfAbsent(String messageStr, List<dynamic> args);
 class MessageLookup extends MessageLookupByLibrary {
   String get localeName => 'en';
 
+  static String m0(value) => "${value} Hz";
+
+  static String m1(value) => "MIDI: ${value}";
+
   final messages = _notInlinedMessages(_notInlinedMessages);
-  static Map<String, Function> _notInlinedMessages(_) => <String, Function>{};
+  static Map<String, Function> _notInlinedMessages(_) => <String, Function>{
+    "analyzeAudioFile": MessageLookupByLibrary.simpleMessage(
+      "Analyze Audio File",
+    ),
+    "analyzingAudio": MessageLookupByLibrary.simpleMessage(
+      "Analyzing audio...",
+    ),
+    "appTitle": MessageLookupByLibrary.simpleMessage("Pure Pitch Detector"),
+    "hz": m0,
+    "midi": m1,
+    "readyToRecord": MessageLookupByLibrary.simpleMessage("Ready to Record"),
+    "viewLogs": MessageLookupByLibrary.simpleMessage("View Logs"),
+  };
 }
