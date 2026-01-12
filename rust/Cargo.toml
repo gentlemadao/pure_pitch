@@ -25,10 +25,10 @@ audioadapter-buffers = "2.0.0"
 
 # AI Inference (ONNX Runtime) - Target Specific
 [target.'cfg(any(target_os = "macos", target_os = "linux", target_os = "windows", target_os = "android"))'.dependencies]
-ort = { version = "2.0.0-rc.11", features = ["load-dynamic"] }
+ort = { version = "2.0.0-rc.11", features = ["load-dynamic", "download-binaries"] }
 
 [target.'cfg(target_os = "ios")'.dependencies]
 ort = { version = "2.0.0-rc.11", features = ["download-binaries"] }
 
 [lints.rust]
-unexpected_cfgs = { level = "warn", check-cfg = ['cfg(frb_generated)'] }
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(frb_generated)', 'cfg(frb_expand)'] }
