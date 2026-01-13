@@ -250,10 +250,12 @@ impl SseDecode for crate::api::pitch::NoteEvent {
         let mut var_startTime = <f64>::sse_decode(deserializer);
         let mut var_duration = <f64>::sse_decode(deserializer);
         let mut var_midiNote = <i32>::sse_decode(deserializer);
+        let mut var_confidence = <f32>::sse_decode(deserializer);
         return crate::api::pitch::NoteEvent {
             start_time: var_startTime,
             duration: var_duration,
             midi_note: var_midiNote,
+            confidence: var_confidence,
         };
     }
 }
@@ -344,6 +346,7 @@ impl flutter_rust_bridge::IntoDart for crate::api::pitch::NoteEvent {
             self.start_time.into_into_dart().into_dart(),
             self.duration.into_into_dart().into_dart(),
             self.midi_note.into_into_dart().into_dart(),
+            self.confidence.into_into_dart().into_dart(),
         ]
         .into_dart()
     }
@@ -437,6 +440,7 @@ impl SseEncode for crate::api::pitch::NoteEvent {
         <f64>::sse_encode(self.start_time, serializer);
         <f64>::sse_encode(self.duration, serializer);
         <i32>::sse_encode(self.midi_note, serializer);
+        <f32>::sse_encode(self.confidence, serializer);
     }
 }
 

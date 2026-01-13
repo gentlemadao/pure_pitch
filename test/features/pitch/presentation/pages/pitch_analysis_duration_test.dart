@@ -33,9 +33,9 @@ void main() {
     // Instead, we populate the provider state directly with known NoteEvents.
     
     final noteEvents = [
-      const NoteEvent(startTime: 0.0, duration: 1.0, midiNote: 60),
-      const NoteEvent(startTime: 2.0, duration: 1.0, midiNote: 64),
-      const NoteEvent(startTime: 4.0, duration: 1.0, midiNote: 67), // Ends at 5.0s
+      const NoteEvent(startTime: 0.0, duration: 1.0, midiNote: 60, confidence: 1.0),
+      const NoteEvent(startTime: 2.0, duration: 1.0, midiNote: 64, confidence: 1.0),
+      const NoteEvent(startTime: 4.0, duration: 1.0, midiNote: 67, confidence: 1.0), // Ends at 5.0s
     ];
     final totalDuration = 5.0;
 
@@ -91,7 +91,7 @@ void main() {
   
   testWidgets('Long audio visualizer width verification', (tester) async {
     final noteEvents = [
-      const NoteEvent(startTime: 10.0, duration: 1.0, midiNote: 60), // Ends at 11.0s
+      const NoteEvent(startTime: 10.0, duration: 1.0, midiNote: 60, confidence: 1.0), // Ends at 11.0s
     ];
 
     await tester.pumpWidget(

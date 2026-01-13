@@ -219,7 +219,20 @@ void main() async {
       if (found) foundCount++;
     }
     
-    expect(foundCount, equals(3), reason: 'Expected to find all 3 notes of the triad');
+    // With Monophonic enforcement, we expect ONLY the strongest note(s) to be detected.
+    // We shouldn't find all 3 simultaneously anymore.
+    // We expect at least one note from the chord to be identified.
+    expect(foundCount, greaterThanOrEqualTo(1), reason: 'Expected to find the strongest note of the triad (Monophonic)');
+    
+    // Also, verify that we don't have overlapping notes (strict monophony check)
+    // Sort by time
+    detectedNotes.sort((a, b) => a.startTime.compareTo(b.startTime));
+    for (int i = 0; i < detectedNotes.length - 1; i++) {
+        final endCurrent = detectedNotes[i].startTime + detectedNotes[i].duration;
+        final startNext = detectedNotes[i+1].startTime;
+        // Allow tiny overlap due to float math, but generally should be distinct
+        expect(startNext, greaterThanOrEqualTo(endCurrent - 0.05), reason: 'Notes should not overlap significantly in monophonic mode');
+    }
 
     // Clean up
     if (await tempFile.exists()) {
@@ -231,9 +244,9 @@ void main() async {
     test('calculateF1Score returns 1.0 for perfect match', () {
       final expected = [60, 64, 67];
       final actual = [
-        const NoteEvent(startTime: 0.1, duration: 1.0, midiNote: 60),
-        const NoteEvent(startTime: 0.1, duration: 1.0, midiNote: 64),
-        const NoteEvent(startTime: 0.1, duration: 1.0, midiNote: 67),
+        const NoteEvent(startTime: 0.1, duration: 1.0, midiNote: 60, confidence: 1.0),
+        const NoteEvent(startTime: 0.1, duration: 1.0, midiNote: 64, confidence: 1.0),
+        const NoteEvent(startTime: 0.1, duration: 1.0, midiNote: 67, confidence: 1.0),
       ];
       
       final score = AccuracyMetrics.calculateF1Score(expected, actual);
@@ -243,8 +256,8 @@ void main() async {
     test('calculateF1Score handles partial matches', () {
       final expected = [60, 64, 67];
       final actual = [
-        const NoteEvent(startTime: 0.1, duration: 1.0, midiNote: 60), // Match
-        const NoteEvent(startTime: 0.1, duration: 1.0, midiNote: 72), // False Positive
+        const NoteEvent(startTime: 0.1, duration: 1.0, midiNote: 60, confidence: 1.0), // Match
+        const NoteEvent(startTime: 0.1, duration: 1.0, midiNote: 72, confidence: 1.0), // False Positive
       ];
       
       // TP=1, FP=1, FN=2

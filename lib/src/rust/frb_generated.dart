@@ -265,12 +265,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   NoteEvent dco_decode_note_event(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 3)
-      throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
+    if (arr.length != 4)
+      throw Exception('unexpected arr length: expect 4 but see ${arr.length}');
     return NoteEvent(
       startTime: dco_decode_f_64(arr[0]),
       duration: dco_decode_f_64(arr[1]),
       midiNote: dco_decode_i_32(arr[2]),
+      confidence: dco_decode_f_32(arr[3]),
     );
   }
 
@@ -372,10 +373,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_startTime = sse_decode_f_64(deserializer);
     var var_duration = sse_decode_f_64(deserializer);
     var var_midiNote = sse_decode_i_32(deserializer);
+    var var_confidence = sse_decode_f_32(deserializer);
     return NoteEvent(
       startTime: var_startTime,
       duration: var_duration,
       midiNote: var_midiNote,
+      confidence: var_confidence,
     );
   }
 
@@ -498,6 +501,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_f_64(self.startTime, serializer);
     sse_encode_f_64(self.duration, serializer);
     sse_encode_i_32(self.midiNote, serializer);
+    sse_encode_f_32(self.confidence, serializer);
   }
 
   @protected

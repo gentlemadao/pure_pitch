@@ -19,10 +19,12 @@ use ort::inputs;
 use crate::api::basic_pitch_postproc::extract_notes;
 
 // Output of offline analysis (Extracted Notes)
+#[derive(Clone, Debug)]
 pub struct NoteEvent {
     pub start_time: f64, // seconds
     pub duration: f64,   // seconds
     pub midi_note: i32,  // MIDI value
+    pub confidence: f32, // Average probability
 }
 
 // Output of real-time detection
@@ -80,7 +82,9 @@ pub fn init_ort(dylib_path: Option<String>) -> Result<()> {
 /// Analyze an audio file and return a list of note events.
 pub fn analyze_audio_file(audio_path: String, model_path: String) -> Result<Vec<NoteEvent>> {
     let samples = decode_and_resample(&audio_path, 22050)?;
-    run_inference_internal(&samples, &model_path)
+    let raw_notes = run_inference_internal(&samples, &model_path)?;
+    let merged_notes = merge_note_events(raw_notes);
+    Ok(enforce_global_monophony(merged_notes))
 }
 
 fn run_inference_internal(samples: &[f32], model_path: &str) -> Result<Vec<NoteEvent>> {
@@ -266,9 +270,161 @@ pub fn detect_pitch_live(samples: Vec<f32>, sample_rate: f64) -> Result<LivePitc
     }
 }
 
+fn merge_note_events(mut notes: Vec<NoteEvent>) -> Vec<NoteEvent> {
+    if notes.is_empty() {
+        return notes;
+    }
+
+    // Sort by start time
+    notes.sort_by(|a, b| a.start_time.partial_cmp(&b.start_time).unwrap_or(std::cmp::Ordering::Equal));
+
+    let mut merged = Vec::new();
+    let mut current = notes[0].clone();
+
+    for next in notes.into_iter().skip(1) {
+        let prev_end = current.start_time + current.duration;
+        // Gap can be negative if overlaps
+        let gap = next.start_time - prev_end;
+        
+        // Tolerance: 25ms = 0.025s
+        // Also handle slight overlaps (gap < 0) but not too much overlap?
+        // Monophonic output shouldn't have large overlaps for same pitch unless chunk boundary artifact.
+        // Let's assume if it's the same pitch and close enough, we merge.
+        if current.midi_note == next.midi_note && gap < 0.05 && gap > -0.05 {
+            // Merge
+            // New end should be max of both ends to handle total enclosure
+            let current_end = current.start_time + current.duration;
+            let next_end = next.start_time + next.duration;
+            let new_end = f64::max(current_end, next_end);
+            let new_duration = new_end - current.start_time;
+            
+            // Weighted confidence
+            let total_dur = current.duration + next.duration;
+            if total_dur > 0.0 {
+                 let new_confidence = (current.confidence * current.duration as f32 + next.confidence * next.duration as f32) / total_dur as f32;
+                 current.confidence = new_confidence;
+            }
+            
+            current.duration = new_duration;
+        } else {
+            merged.push(current);
+            current = next;
+        }
+    }
+    merged.push(current);
+
+    merged
+}
+
+fn enforce_global_monophony(mut notes: Vec<NoteEvent>) -> Vec<NoteEvent> {
+    if notes.is_empty() {
+        return notes;
+    }
+    
+    // Sort by start time
+    notes.sort_by(|a, b| a.start_time.partial_cmp(&b.start_time).unwrap_or(std::cmp::Ordering::Equal));
+    
+    let mut processed = Vec::new();
+    let mut current = notes[0].clone();
+    
+    for next in notes.into_iter().skip(1) {
+        let current_end = current.start_time + current.duration;
+        
+        if next.start_time < current_end {
+            // Overlap detected
+            if next.confidence > current.confidence {
+                // Next wins. Truncate current.
+                let new_duration = next.start_time - current.start_time;
+                if new_duration >= 0.1 { // Min duration check (100ms)
+                    current.duration = new_duration;
+                    processed.push(current);
+                }
+                current = next;
+            } else {
+                // Current wins (or equal). Truncate/Delay Next.
+                let next_end = next.start_time + next.duration;
+                let new_duration = next_end - current_end;
+                
+                if new_duration >= 0.1 {
+                    let mut delayed_next = next;
+                    delayed_next.start_time = current_end;
+                    delayed_next.duration = new_duration;
+                    
+                    processed.push(current);
+                    current = delayed_next;
+                } else {
+                    // Next is swallowed/discarded. Keep current as active.
+                }
+            }
+        } else {
+            // No overlap
+            processed.push(current);
+            current = next;
+        }
+    }
+    // Push the last one (check duration just in case, though usually valid from source)
+    if current.duration >= 0.1 {
+        processed.push(current);
+    }
+    
+    processed
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn test_enforce_global_monophony() {
+        let notes = vec![
+            // Note A: 0.0 - 1.0, conf 0.8
+            NoteEvent { start_time: 0.0, duration: 1.0, midi_note: 60, confidence: 0.8 },
+            // Note B: 0.5 - 1.5, conf 0.9 (Should truncate A)
+            NoteEvent { start_time: 0.5, duration: 1.0, midi_note: 62, confidence: 0.9 },
+            // Note C: 1.4 - 2.4, conf 0.5 (Should be delayed/truncated by B)
+            NoteEvent { start_time: 1.4, duration: 1.0, midi_note: 64, confidence: 0.5 },
+        ];
+        
+        let processed = enforce_global_monophony(notes);
+        
+        assert_eq!(processed.len(), 3);
+        
+        // Note A should end at 0.5
+        assert!((processed[0].duration - 0.5).abs() < 0.001);
+        
+        // Note B should start at 0.5, duration 1.0
+        assert_eq!(processed[1].start_time, 0.5);
+        assert_eq!(processed[1].duration, 1.0);
+        
+        // Note C should start at 1.5 (truncated start)
+        assert_eq!(processed[2].start_time, 1.5);
+        assert!((processed[2].duration - 0.9).abs() < 0.001);
+    }
+
+    #[test]
+    fn test_merge_note_events() {
+        let notes = vec![
+            NoteEvent { start_time: 0.0, duration: 1.0, midi_note: 60, confidence: 0.8 },
+            NoteEvent { start_time: 1.01, duration: 1.0, midi_note: 60, confidence: 0.9 }, // Should merge (gap 0.01)
+            NoteEvent { start_time: 2.5, duration: 1.0, midi_note: 60, confidence: 0.8 },  // Should not merge (gap 0.49)
+            NoteEvent { start_time: 3.6, duration: 1.0, midi_note: 62, confidence: 0.8 },  // Diff pitch
+        ];
+        
+        let merged = merge_note_events(notes);
+        
+        assert_eq!(merged.len(), 3);
+        // First merged note
+        assert_eq!(merged[0].midi_note, 60);
+        assert!((merged[0].duration - 2.01).abs() < 0.001);
+        // Confidence: (0.8*1.0 + 0.9*1.0) / 2.0 = 0.85
+        assert!((merged[0].confidence - 0.85).abs() < 0.001);
+        
+        // Second note
+        assert_eq!(merged[1].start_time, 2.5);
+        
+        // Third note
+        assert_eq!(merged[2].midi_note, 62);
+    }
 
     #[test]
     fn test_preprocess_chunk_shape() {

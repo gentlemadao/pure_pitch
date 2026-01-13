@@ -6,7 +6,8 @@
 import '../frb_generated.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
-// These functions are ignored because they are not marked as `pub`: `decode_and_resample`, `preprocess_chunk`, `run_inference_internal`
+// These functions are ignored because they are not marked as `pub`: `decode_and_resample`, `merge_note_events`, `preprocess_chunk`, `run_inference_internal`
+// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `clone`, `fmt`
 
 /// Initialize ORT environment.
 /// Must be called before any other ORT operations.
@@ -62,16 +63,21 @@ class NoteEvent {
   final double startTime;
   final double duration;
   final int midiNote;
+  final double confidence;
 
   const NoteEvent({
     required this.startTime,
     required this.duration,
     required this.midiNote,
+    required this.confidence,
   });
 
   @override
   int get hashCode =>
-      startTime.hashCode ^ duration.hashCode ^ midiNote.hashCode;
+      startTime.hashCode ^
+      duration.hashCode ^
+      midiNote.hashCode ^
+      confidence.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -80,5 +86,6 @@ class NoteEvent {
           runtimeType == other.runtimeType &&
           startTime == other.startTime &&
           duration == other.duration &&
-          midiNote == other.midiNote;
+          midiNote == other.midiNote &&
+          confidence == other.confidence;
 }
