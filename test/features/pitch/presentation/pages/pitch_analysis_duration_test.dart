@@ -36,9 +36,31 @@ void main() {
     tester,
   ) async {
     // 1. Setup mock data
-    // We can't easily run the real analysis in widget test due to AssetLoader and threading.
-    // Instead, we populate the provider state directly with known NoteEvents.
+    final noteEvents = [
+      const NoteEvent(
+          startTime: 0.0, duration: 1.0, midiNote: 60, confidence: 1.0),
+      const NoteEvent(
+          startTime: 2.0, duration: 1.0, midiNote: 64, confidence: 1.0),
+      const NoteEvent(
+          startTime: 4.0, duration: 1.0, midiNote: 67, confidence: 1.0), // Ends at 5.0s
+    ];
 
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          pitchProvider.overrideWith(() => MockPitchNotifier(noteEvents)),
+        ],
+        child: const MaterialApp(
+          localizationsDelegates: [
+            S.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          home: PitchDetectorPage(),
+        ),
+      ),
+    );
     await tester.pumpAndSettle();
 
     // 2. Find PitchVisualizer
