@@ -1,3 +1,5 @@
+// Copyright (c) 2026. Licensed under the MIT OR Apache-2.0 License.
+// SPDX-License-Identifier: MIT OR Apache-2.0
 import 'package:go_router/go_router.dart';
 import 'package:pure_pitch/features/pitch/presentation/pages/pitch_detector_page.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';

@@ -1,3 +1,5 @@
+// Copyright (c) 2026. Licensed under the MIT OR Apache-2.0 License.
+// SPDX-License-Identifier: MIT OR Apache-2.0
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:pure_pitch/src/rust/api/pitch.dart';

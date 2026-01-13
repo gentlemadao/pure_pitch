@@ -16,4 +16,7 @@
 ## Documentation
 *   **Language**: All comments and documentation must be in English.
 *   **Header**: All files must start with the license header:
-    `// Copyright (c) <Year>. Licensed under the MIT OR Apache-2.0 License.`
+    ```rust
+    // Copyright (c) 2026. Licensed under the MIT OR Apache-2.0 License.
+    // SPDX-License-Identifier: MIT OR Apache-2.0
+    ```

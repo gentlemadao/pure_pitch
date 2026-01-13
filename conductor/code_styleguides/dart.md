@@ -1,6 +1,11 @@
 # Dart Style Guide
 
 ## General
+*   **License Header**: Every file must start with:
+    ```dart
+    // Copyright (c) 2026. Licensed under the MIT OR Apache-2.0 License.
+    // SPDX-License-Identifier: MIT OR Apache-2.0
+    ```
 *   **Formatting**: Adhere to `dart format`.
 *   **Linting**: Strictly follow `flutter_lints`.
 *   **Naming**:

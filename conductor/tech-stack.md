@@ -2,6 +2,11 @@
 
 ## License
 *   **MIT OR Apache-2.0**: The entire project is dual-licensed under MIT or Apache-2.0.
+*   **License Header**: Every source file (`.dart`, `.rs`) MUST include the following header:
+    ```
+    // Copyright (c) 2026. Licensed under the MIT OR Apache-2.0 License.
+    // SPDX-License-Identifier: MIT OR Apache-2.0
+    ```
 *   **Restriction**: Use of GPL-licensed libraries is strictly forbidden.
 
 ## Core
