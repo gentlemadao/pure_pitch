@@ -60,7 +60,7 @@ void main() {
     try {
       await initOrt(dylibPath: ortDylibPath);
     } catch (e) {
-      // Ignore errors in provider test if ORT fails to init, 
+      // Ignore errors in provider test if ORT fails to init,
       // as some tests might not need it or handles it via state.
     }
   });

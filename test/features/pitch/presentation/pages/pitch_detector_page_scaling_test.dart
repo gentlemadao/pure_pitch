@@ -33,7 +33,7 @@ void main() {
     // Initial state check (might be overridden by LayoutBuilder)
     final context = tester.element(find.byType(PitchDetectorPage));
     final container = ProviderScope.containerOf(context);
-    
+
     // Find zoom buttons
     final zoomIn = find.byIcon(Icons.zoom_in);
     final zoomOut = find.byIcon(Icons.zoom_out);
@@ -45,9 +45,12 @@ void main() {
     final initialWindow = container.read(pitchProvider).visibleTimeWindow;
     await tester.tap(zoomOut);
     await tester.pumpAndSettle();
-    
+
     // Expect increase
-    expect(container.read(pitchProvider).visibleTimeWindow, greaterThan(initialWindow));
+    expect(
+      container.read(pitchProvider).visibleTimeWindow,
+      greaterThan(initialWindow),
+    );
 
     // Tap zoom in (decrease time window)
     await tester.tap(zoomIn);

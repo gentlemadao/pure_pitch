@@ -2,20 +2,23 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
 use anyhow::Result;
-use pitch_detection::detector::mcleod::McLeodDetector;
-use pitch_detection::detector::PitchDetector;
-use std::fs::File;
-use symphonia::core::io::MediaSourceStream;
-use symphonia::core::probe::Hint;
-use symphonia::core::formats::FormatOptions;
-use symphonia::core::meta::MetadataOptions;
-use symphonia::core::codecs::DecoderOptions;
-use symphonia::core::audio::{AudioBufferRef, Signal};
-use rubato::{Resampler, Async, FixedAsync, SincInterpolationParameters, SincInterpolationType, WindowFunction};
 use audioadapter_buffers::owned::InterleavedOwned;
 use ndarray::Array3;
-use ort::session::Session;
 use ort::inputs;
+use ort::session::Session;
+use pitch_detection::detector::PitchDetector;
+use pitch_detection::detector::mcleod::McLeodDetector;
+use rubato::{
+    Async, FixedAsync, Resampler, SincInterpolationParameters, SincInterpolationType,
+    WindowFunction,
+};
+use std::fs::File;
+use symphonia::core::audio::{AudioBufferRef, Signal};
+use symphonia::core::codecs::DecoderOptions;
+use symphonia::core::formats::FormatOptions;
+use symphonia::core::io::MediaSourceStream;
+use symphonia::core::meta::MetadataOptions;
+use symphonia::core::probe::Hint;
 
 use crate::api::basic_pitch_postproc::extract_notes;
 
@@ -32,47 +35,50 @@ pub struct NoteEvent {
 pub struct LivePitch {
     pub hz: f64,
     pub midi_note: i32,
-    pub clarity: f32,    // Confidence (0.0 - 1.0)
+    pub clarity: f32, // Confidence (0.0 - 1.0)
 }
 
 use std::env;
 
-/// Initialize ORT environment. 
+/// Initialize ORT environment.
 /// Must be called before any other ORT operations.
-/// 
+///
 /// [dylib_path] Optional path to the onnxruntime dynamic library.
 /// If provided, it sets the ORT_DYLIB_PATH environment variable.
 pub fn init_ort(dylib_path: Option<String>) -> Result<()> {
     if let Some(path) = dylib_path {
         unsafe {
-             env::set_var("ORT_DYLIB_PATH", path);
+            env::set_var("ORT_DYLIB_PATH", path);
         }
     } else {
         #[cfg(any(target_os = "macos", target_os = "ios"))]
         {
             if let Ok(exe_path) = env::current_exe() {
                 let contents = exe_path.parent().unwrap();
-                
+
                 let dylib_path = if cfg!(target_os = "macos") {
                     // macOS: Contents/Frameworks/rust_lib_pure_pitch.framework/Resources/libonnxruntime.dylib
-                    contents.parent().unwrap()
+                    contents
+                        .parent()
+                        .unwrap()
                         .join("Frameworks")
                         .join("rust_lib_pure_pitch.framework")
                         .join("Resources")
                         .join("libonnxruntime.dylib")
                 } else {
                     // iOS: Frameworks/onnxruntime.framework/onnxruntime
-                    contents.join("Frameworks")
+                    contents
+                        .join("Frameworks")
                         .join("onnxruntime.framework")
                         .join("onnxruntime")
                 };
-                
+
                 if dylib_path.exists() {
-                     // ORT_DYLIB_PATH setting is unsafe because it modifies global environment
-                     // which is not thread-safe. We do this at init time.
-                     unsafe {
-                         env::set_var("ORT_DYLIB_PATH", dylib_path);
-                     }
+                    // ORT_DYLIB_PATH setting is unsafe because it modifies global environment
+                    // which is not thread-safe. We do this at init time.
+                    unsafe {
+                        env::set_var("ORT_DYLIB_PATH", dylib_path);
+                    }
                 }
             }
         }
@@ -91,7 +97,7 @@ pub fn analyze_audio_file(audio_path: String, model_path: String) -> Result<Vec<
 fn run_inference_internal(samples: &[f32], model_path: &str) -> Result<Vec<NoteEvent>> {
     let target_len = 43844;
     let mut all_notes = Vec::new();
-    
+
     // Load model
     let mut session = Session::builder()?.commit_from_file(model_path)?;
 
@@ -105,34 +111,50 @@ fn run_inference_internal(samples: &[f32], model_path: &str) -> Result<Vec<NoteE
         let start = i * target_len;
         let end = std::cmp::min(start + target_len, total_samples);
         let chunk_len = end - start;
-        
+
         // Prepare padded chunk
         let mut chunk_data = vec![0.0f32; target_len];
         chunk_data[..chunk_len].copy_from_slice(&samples[start..end]);
-        
+
         let input_tensor = preprocess_chunk(&chunk_data);
-        
+
         // Debug check
         if i == 0 {
             log::info!("Input tensor shape: {:?}", input_tensor.shape());
         }
-        
+
         // Convert to ORT Value
         let input_value = ort::value::Tensor::from_array(input_tensor)?;
-        
+
         // Run inference
         let outputs = session.run(inputs!["input_2" => input_value])?;
-        
+
         // Extract outputs
         let (note_shape, note_data) = outputs["note"].try_extract_tensor::<f32>()?;
         let (onset_shape, onset_data) = outputs["onset"].try_extract_tensor::<f32>()?;
-        
+
         // Convert to Array3
-        let note_array = ndarray::ArrayView::from_shape((note_shape[0] as usize, note_shape[1] as usize, note_shape[2] as usize), note_data)?.to_owned();
-        let onset_array = ndarray::ArrayView::from_shape((onset_shape[0] as usize, onset_shape[1] as usize, onset_shape[2] as usize), onset_data)?.to_owned();
-        
+        let note_array = ndarray::ArrayView::from_shape(
+            (
+                note_shape[0] as usize,
+                note_shape[1] as usize,
+                note_shape[2] as usize,
+            ),
+            note_data,
+        )?
+        .to_owned();
+        let onset_array = ndarray::ArrayView::from_shape(
+            (
+                onset_shape[0] as usize,
+                onset_shape[1] as usize,
+                onset_shape[2] as usize,
+            ),
+            onset_data,
+        )?
+        .to_owned();
+
         let mut chunk_notes = extract_notes(note_array, onset_array);
-        
+
         // Adjust timestamps
         // Basic Pitch time scale: output frame index -> time?
         // extract_notes calculates start_time based on frame index.
@@ -141,7 +163,7 @@ fn run_inference_internal(samples: &[f32], model_path: &str) -> Result<Vec<NoteE
         for note in &mut chunk_notes {
             note.start_time += chunk_start_time;
         }
-        
+
         all_notes.extend(chunk_notes);
     }
 
@@ -152,7 +174,7 @@ fn preprocess_chunk(chunk: &[f32]) -> Array3<f32> {
     // Expects chunk to be exactly 43844 length (or whatever target_len is passed, but here we assume caller handles padding)
     // Basic Pitch expects [Batch, Time, Channels] -> [1, N, 1]
     let len = chunk.len();
-    let array = ndarray::Array::from_shape_vec((1, len, 1), chunk.to_vec()).unwrap(); 
+    let array = ndarray::Array::from_shape_vec((1, len, 1), chunk.to_vec()).unwrap();
     array
 }
 
@@ -162,13 +184,23 @@ fn decode_and_resample(path: &str, target_sample_rate: u32) -> Result<Vec<f32>> 
     let mut hint = Hint::new();
     hint.with_extension("mp3"); // Should be dynamic based on extension
 
-    let probed = symphonia::default::get_probe().format(&hint, mss, &FormatOptions::default(), &MetadataOptions::default())?;
+    let probed = symphonia::default::get_probe().format(
+        &hint,
+        mss,
+        &FormatOptions::default(),
+        &MetadataOptions::default(),
+    )?;
     let mut format = probed.format;
-    let track = format.tracks().iter().find(|t| t.codec_params.codec != symphonia::core::codecs::CODEC_TYPE_NULL).ok_or_else(|| anyhow::anyhow!("No supported audio track found"))?;
-    
+    let track = format
+        .tracks()
+        .iter()
+        .find(|t| t.codec_params.codec != symphonia::core::codecs::CODEC_TYPE_NULL)
+        .ok_or_else(|| anyhow::anyhow!("No supported audio track found"))?;
+
     let codec_params = &track.codec_params;
-    let mut decoder = symphonia::default::get_codecs().make(codec_params, &DecoderOptions::default())?;
-    
+    let mut decoder =
+        symphonia::default::get_codecs().make(codec_params, &DecoderOptions::default())?;
+
     let track_id = track.id;
     let mut samples: Vec<f32> = Vec::new();
     let original_sample_rate = codec_params.sample_rate.unwrap_or(44100);
@@ -179,7 +211,7 @@ fn decode_and_resample(path: &str, target_sample_rate: u32) -> Result<Vec<f32>> 
         }
 
         let decoded = decoder.decode(&packet)?;
-        
+
         match decoded {
             AudioBufferRef::F32(buf) => {
                 for i in 0..buf.frames() {
@@ -189,7 +221,7 @@ fn decode_and_resample(path: &str, target_sample_rate: u32) -> Result<Vec<f32>> 
                     }
                     samples.push(sum / buf.spec().channels.count() as f32);
                 }
-            },
+            }
             AudioBufferRef::S16(buf) => {
                 for i in 0..buf.frames() {
                     let mut sum = 0.0;
@@ -198,7 +230,7 @@ fn decode_and_resample(path: &str, target_sample_rate: u32) -> Result<Vec<f32>> 
                     }
                     samples.push(sum / buf.spec().channels.count() as f32);
                 }
-            },
+            }
             _ => {
                 // TODO: Support other bit depths if needed
                 log::warn!("Unsupported audio buffer type");
@@ -214,7 +246,7 @@ fn decode_and_resample(path: &str, target_sample_rate: u32) -> Result<Vec<f32>> 
             window: WindowFunction::BlackmanHarris2,
             oversampling_factor: 256,
         };
-        
+
         let chunk_size = samples.len();
         let mut resampler = Async::<f32>::new_sinc(
             target_sample_rate as f64 / original_sample_rate as f64,
@@ -224,10 +256,11 @@ fn decode_and_resample(path: &str, target_sample_rate: u32) -> Result<Vec<f32>> 
             1,
             FixedAsync::Input,
         )?;
-        
+
         let num_frames = samples.len();
-        let input_adapter = InterleavedOwned::new_from(samples, 1, num_frames).map_err(|e| anyhow::anyhow!("Failed to create adapter: {:?}", e))?;
-        
+        let input_adapter = InterleavedOwned::new_from(samples, 1, num_frames)
+            .map_err(|e| anyhow::anyhow!("Failed to create adapter: {:?}", e))?;
+
         let resampled = resampler.process(&input_adapter, 0, None)?;
         Ok(resampled.take_data())
     } else {
@@ -242,11 +275,16 @@ pub fn detect_pitch_live(samples: Vec<f32>, sample_rate: f64) -> Result<LivePitc
 
     let signal: Vec<f64> = samples.iter().map(|&x| x as f64).collect();
     let size = signal.len();
-    let padding = size / 2; 
+    let padding = size / 2;
 
     let mut detector = McLeodDetector::new(size, padding);
 
-    match detector.get_pitch(&signal, sample_rate as usize, POWER_THRESHOLD, CLARITY_THRESHOLD) {
+    match detector.get_pitch(
+        &signal,
+        sample_rate as usize,
+        POWER_THRESHOLD,
+        CLARITY_THRESHOLD,
+    ) {
         Some(pitch) => {
             // MIDI = 69 + 12 * log2(freq / 440)
             let midi_note = if pitch.frequency > 0.0 {
@@ -260,14 +298,12 @@ pub fn detect_pitch_live(samples: Vec<f32>, sample_rate: f64) -> Result<LivePitc
                 midi_note,
                 clarity: pitch.clarity as f32,
             })
-        },
-        None => {
-             Ok(LivePitch {
-                hz: 0.0,
-                midi_note: 0,
-                clarity: 0.0,
-            })
         }
+        None => Ok(LivePitch {
+            hz: 0.0,
+            midi_note: 0,
+            clarity: 0.0,
+        }),
     }
 }
 
@@ -277,7 +313,11 @@ fn merge_note_events(mut notes: Vec<NoteEvent>) -> Vec<NoteEvent> {
     }
 
     // Sort by start time
-    notes.sort_by(|a, b| a.start_time.partial_cmp(&b.start_time).unwrap_or(std::cmp::Ordering::Equal));
+    notes.sort_by(|a, b| {
+        a.start_time
+            .partial_cmp(&b.start_time)
+            .unwrap_or(std::cmp::Ordering::Equal)
+    });
 
     let mut merged = Vec::new();
     let mut current = notes[0].clone();
@@ -286,7 +326,7 @@ fn merge_note_events(mut notes: Vec<NoteEvent>) -> Vec<NoteEvent> {
         let prev_end = current.start_time + current.duration;
         // Gap can be negative if overlaps
         let gap = next.start_time - prev_end;
-        
+
         // Tolerance: 25ms = 0.025s
         // Also handle slight overlaps (gap < 0) but not too much overlap?
         // Monophonic output shouldn't have large overlaps for same pitch unless chunk boundary artifact.
@@ -298,14 +338,16 @@ fn merge_note_events(mut notes: Vec<NoteEvent>) -> Vec<NoteEvent> {
             let next_end = next.start_time + next.duration;
             let new_end = f64::max(current_end, next_end);
             let new_duration = new_end - current.start_time;
-            
+
             // Weighted confidence
             let total_dur = current.duration + next.duration;
             if total_dur > 0.0 {
-                 let new_confidence = (current.confidence * current.duration as f32 + next.confidence * next.duration as f32) / total_dur as f32;
-                 current.confidence = new_confidence;
+                let new_confidence = (current.confidence * current.duration as f32
+                    + next.confidence * next.duration as f32)
+                    / total_dur as f32;
+                current.confidence = new_confidence;
             }
-            
+
             current.duration = new_duration;
         } else {
             merged.push(current);
@@ -321,22 +363,27 @@ fn enforce_global_monophony(mut notes: Vec<NoteEvent>) -> Vec<NoteEvent> {
     if notes.is_empty() {
         return notes;
     }
-    
+
     // Sort by start time
-    notes.sort_by(|a, b| a.start_time.partial_cmp(&b.start_time).unwrap_or(std::cmp::Ordering::Equal));
-    
+    notes.sort_by(|a, b| {
+        a.start_time
+            .partial_cmp(&b.start_time)
+            .unwrap_or(std::cmp::Ordering::Equal)
+    });
+
     let mut processed = Vec::new();
     let mut current = notes[0].clone();
-    
+
     for next in notes.into_iter().skip(1) {
         let current_end = current.start_time + current.duration;
-        
+
         if next.start_time < current_end {
             // Overlap detected
             if next.confidence > current.confidence {
                 // Next wins. Truncate current.
                 let new_duration = next.start_time - current.start_time;
-                if new_duration >= 0.1 { // Min duration check (100ms)
+                if new_duration >= 0.1 {
+                    // Min duration check (100ms)
                     current.duration = new_duration;
                     processed.push(current);
                 }
@@ -345,12 +392,12 @@ fn enforce_global_monophony(mut notes: Vec<NoteEvent>) -> Vec<NoteEvent> {
                 // Current wins (or equal). Truncate/Delay Next.
                 let next_end = next.start_time + next.duration;
                 let new_duration = next_end - current_end;
-                
+
                 if new_duration >= 0.1 {
                     let mut delayed_next = next;
                     delayed_next.start_time = current_end;
                     delayed_next.duration = new_duration;
-                    
+
                     processed.push(current);
                     current = delayed_next;
                 } else {
@@ -367,7 +414,7 @@ fn enforce_global_monophony(mut notes: Vec<NoteEvent>) -> Vec<NoteEvent> {
     if current.duration >= 0.1 {
         processed.push(current);
     }
-    
+
     processed
 }
 
@@ -379,24 +426,39 @@ mod tests {
     fn test_enforce_global_monophony() {
         let notes = vec![
             // Note A: 0.0 - 1.0, conf 0.8
-            NoteEvent { start_time: 0.0, duration: 1.0, midi_note: 60, confidence: 0.8 },
+            NoteEvent {
+                start_time: 0.0,
+                duration: 1.0,
+                midi_note: 60,
+                confidence: 0.8,
+            },
             // Note B: 0.5 - 1.5, conf 0.9 (Should truncate A)
-            NoteEvent { start_time: 0.5, duration: 1.0, midi_note: 62, confidence: 0.9 },
+            NoteEvent {
+                start_time: 0.5,
+                duration: 1.0,
+                midi_note: 62,
+                confidence: 0.9,
+            },
             // Note C: 1.4 - 2.4, conf 0.5 (Should be delayed/truncated by B)
-            NoteEvent { start_time: 1.4, duration: 1.0, midi_note: 64, confidence: 0.5 },
+            NoteEvent {
+                start_time: 1.4,
+                duration: 1.0,
+                midi_note: 64,
+                confidence: 0.5,
+            },
         ];
-        
+
         let processed = enforce_global_monophony(notes);
-        
+
         assert_eq!(processed.len(), 3);
-        
+
         // Note A should end at 0.5
         assert!((processed[0].duration - 0.5).abs() < 0.001);
-        
+
         // Note B should start at 0.5, duration 1.0
         assert_eq!(processed[1].start_time, 0.5);
         assert_eq!(processed[1].duration, 1.0);
-        
+
         // Note C should start at 1.5 (truncated start)
         assert_eq!(processed[2].start_time, 1.5);
         assert!((processed[2].duration - 0.9).abs() < 0.001);
@@ -405,24 +467,44 @@ mod tests {
     #[test]
     fn test_merge_note_events() {
         let notes = vec![
-            NoteEvent { start_time: 0.0, duration: 1.0, midi_note: 60, confidence: 0.8 },
-            NoteEvent { start_time: 1.01, duration: 1.0, midi_note: 60, confidence: 0.9 }, // Should merge (gap 0.01)
-            NoteEvent { start_time: 2.5, duration: 1.0, midi_note: 60, confidence: 0.8 },  // Should not merge (gap 0.49)
-            NoteEvent { start_time: 3.6, duration: 1.0, midi_note: 62, confidence: 0.8 },  // Diff pitch
+            NoteEvent {
+                start_time: 0.0,
+                duration: 1.0,
+                midi_note: 60,
+                confidence: 0.8,
+            },
+            NoteEvent {
+                start_time: 1.01,
+                duration: 1.0,
+                midi_note: 60,
+                confidence: 0.9,
+            }, // Should merge (gap 0.01)
+            NoteEvent {
+                start_time: 2.5,
+                duration: 1.0,
+                midi_note: 60,
+                confidence: 0.8,
+            }, // Should not merge (gap 0.49)
+            NoteEvent {
+                start_time: 3.6,
+                duration: 1.0,
+                midi_note: 62,
+                confidence: 0.8,
+            }, // Diff pitch
         ];
-        
+
         let merged = merge_note_events(notes);
-        
+
         assert_eq!(merged.len(), 3);
         // First merged note
         assert_eq!(merged[0].midi_note, 60);
         assert!((merged[0].duration - 2.01).abs() < 0.001);
         // Confidence: (0.8*1.0 + 0.9*1.0) / 2.0 = 0.85
         assert!((merged[0].confidence - 0.85).abs() < 0.001);
-        
+
         // Second note
         assert_eq!(merged[1].start_time, 2.5);
-        
+
         // Third note
         assert_eq!(merged[2].midi_note, 62);
     }
@@ -440,13 +522,13 @@ mod tests {
         let freq = 440.0; // A4
         let duration = 0.5; // 500ms
         let num_samples = (sample_rate * duration) as usize;
-        
+
         let samples: Vec<f32> = (0..num_samples)
             .map(|i| (2.0 * std::f64::consts::PI * freq * (i as f64) / sample_rate).sin() as f32)
             .collect();
 
         let result = detect_pitch_live(samples, sample_rate).unwrap();
-        
+
         println!("Detected: {} Hz, Clarity: {}", result.hz, result.clarity);
         assert!((result.hz - freq).abs() < 5.0);
         assert_eq!(result.midi_note, 69);
@@ -455,8 +537,9 @@ mod tests {
 
     #[test]
     fn test_analyze_audio_file_model_loading() {
-        let model_path = "../assets/models/basic_pitch.onnx"; 
-        let result = analyze_audio_file("non_existent_audio.wav".to_string(), model_path.to_string());
+        let model_path = "../assets/models/basic_pitch.onnx";
+        let result =
+            analyze_audio_file("non_existent_audio.wav".to_string(), model_path.to_string());
         assert!(result.is_err());
     }
 

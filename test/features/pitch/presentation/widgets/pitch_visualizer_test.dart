@@ -15,16 +15,13 @@ void main() {
         duration: 1.0,
         midiNote: 60,
         confidence: 0.9,
-      )
+      ),
     ];
 
     await tester.pumpWidget(
       MaterialApp(
         home: Scaffold(
-          body: PitchVisualizer(
-            history: const [],
-            noteEvents: noteEvents,
-          ),
+          body: PitchVisualizer(history: const [], noteEvents: noteEvents),
         ),
       ),
     );

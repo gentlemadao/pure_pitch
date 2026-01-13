@@ -14,9 +14,9 @@ void main() async {
     duration: 3.0,
     sampleRate: 44100,
   );
-  File('${outputDir.path}/sine_a4_440hz.wav').writeAsBytesSync(
-    AudioGenerator.encodeWav(a4Samples),
-  );
+  File(
+    '${outputDir.path}/sine_a4_440hz.wav',
+  ).writeAsBytesSync(AudioGenerator.encodeWav(a4Samples));
   print('Generated: sine_a4_440hz.wav');
 
   // 2. C Major Scale (Sawtooth)
@@ -32,34 +32,34 @@ void main() async {
       duration: 0.5,
       sampleRate: 44100,
     ).map((s) => s * 0.5).toList(); // Lower volume
-    
+
     scaleSamples.addAll(noteSamples);
     scaleSamples.addAll(silence);
   }
-  
-  File('${outputDir.path}/scale_c_major_saw.wav').writeAsBytesSync(
-    AudioGenerator.encodeWav(scaleSamples),
-  );
+
+  File(
+    '${outputDir.path}/scale_c_major_saw.wav',
+  ).writeAsBytesSync(AudioGenerator.encodeWav(scaleSamples));
   print('Generated: scale_c_major_saw.wav');
 
   // 3. C Major Triad (Chord)
   // C4, E4, G4
   final chordNotes = [60, 64, 67];
   final signals = <List<double>>[];
-  
+
   for (final note in chordNotes) {
-     final freq = AudioGenerator.midiToFreq(note);
-     final samples = AudioGenerator.generateSawtoothWave(
-       frequency: freq,
-       duration: 3.0,
-       sampleRate: 44100,
-     ).map((s) => s * 0.3).toList();
-     signals.add(samples);
+    final freq = AudioGenerator.midiToFreq(note);
+    final samples = AudioGenerator.generateSawtoothWave(
+      frequency: freq,
+      duration: 3.0,
+      sampleRate: 44100,
+    ).map((s) => s * 0.3).toList();
+    signals.add(samples);
   }
-  
+
   final chordSamples = AudioGenerator.mix(signals);
-  File('${outputDir.path}/chord_c_major.wav').writeAsBytesSync(
-    AudioGenerator.encodeWav(chordSamples),
-  );
+  File(
+    '${outputDir.path}/chord_c_major.wav',
+  ).writeAsBytesSync(AudioGenerator.encodeWav(chordSamples));
   print('Generated: chord_c_major.wav');
 }

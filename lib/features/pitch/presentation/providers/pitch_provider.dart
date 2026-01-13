@@ -53,14 +53,14 @@ class Pitch extends _$Pitch {
         audioPath: audioPath,
         modelPath: modelPath,
       );
-      
+
       talker.info('Analysis completed. Found ${noteEvents.length} notes.');
       if (noteEvents.isNotEmpty) {
         final last = noteEvents.last;
         final duration = last.startTime + last.duration;
         talker.info('Analysis duration: ${duration.toStringAsFixed(2)}s');
       }
-      
+
       state = state.copyWith(isAnalyzing: false, analysisResults: noteEvents);
     } catch (e) {
       state = state.copyWith(isAnalyzing: false, errorMessage: e.toString());
@@ -124,9 +124,7 @@ class Pitch extends _$Pitch {
   }
 
   void updateVisibleTimeWindow(double newValue) {
-    state = state.copyWith(
-      visibleTimeWindow: newValue.clamp(5.0, 10.0),
-    );
+    state = state.copyWith(visibleTimeWindow: newValue.clamp(5.0, 10.0));
   }
 
   void _processAudioChunk(Uint8List bytes) {

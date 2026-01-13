@@ -9,7 +9,7 @@ class PitchVisualizer extends StatefulWidget {
   final List<TimestampedPitch> history;
   final List<NoteEvent> noteEvents;
   final bool isRecording;
-  final double visibleTimeWindow; 
+  final double visibleTimeWindow;
   final int minNote;
   final int maxNote;
 
@@ -41,13 +41,16 @@ class _PitchVisualizerState extends State<PitchVisualizer> {
         double totalWidth = constraints.maxWidth;
         if (widget.noteEvents.isNotEmpty) {
           final lastNote = widget.noteEvents.last;
-          totalWidth = (lastNote.startTime + lastNote.duration) * pixelsPerSecond + 100;
+          totalWidth =
+              (lastNote.startTime + lastNote.duration) * pixelsPerSecond + 100;
         }
 
         // Auto-scroll to the end if recording
         if (widget.isRecording && _scrollController.hasClients) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
-            _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
+            _scrollController.jumpTo(
+              _scrollController.position.maxScrollExtent,
+            );
           });
         }
 
