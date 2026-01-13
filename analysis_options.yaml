@@ -14,6 +14,7 @@ analyzer:
     - "**/*.g.dart"
     - "**/*.freezed.dart"
     - "lib/core/localization/generated/**"
+    - "rust_builder/**"
   errors:
     invalid_annotation_target: ignore
 
