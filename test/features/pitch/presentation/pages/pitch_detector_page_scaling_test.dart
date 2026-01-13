@@ -3,9 +3,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pure_pitch/features/pitch/presentation/pages/pitch_detector_page.dart';
 import 'package:pure_pitch/features/pitch/presentation/providers/pitch_provider.dart';
-import 'package:pure_pitch/src/rust/frb_generated.dart';
-import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
-import 'dart:io';
 
 import 'package:pure_pitch/core/localization/generated/l10n.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';

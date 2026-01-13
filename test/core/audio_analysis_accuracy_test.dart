@@ -1,5 +1,6 @@
 
 import 'dart:io';
+import 'dart:developer' as developer;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pure_pitch/src/rust/api/pitch.dart';
 import 'package:pure_pitch/src/rust/frb_generated.dart';
@@ -19,7 +20,7 @@ void main() async {
          dylibPath = '${Directory.current.path}/rust/target/debug/librust_lib_pure_pitch.so';
       }
       
-      print('Loading rust library from: $dylibPath');
+            developer.log('Loading rust library from: $dylibPath');
       await RustLib.init(externalLibrary: ExternalLibrary.open(dylibPath));
     }
     
@@ -47,7 +48,7 @@ void main() async {
     try {
       await initOrt(dylibPath: ortDylibPath);
     } catch (e) {
-      print('Warning: initOrt failed (expected if already initialized or env not set): $e');
+            developer.log('Warning: initOrt failed (expected if already initialized or env not set): $e');
     }
   });
 
@@ -84,9 +85,9 @@ void main() async {
     // However, Basic Pitch often struggles with pure sine waves as they lack harmonics. 
     // Let's see what happens.
     
-    print('Detected notes: $notes');
+          developer.log('Detected notes: $notes');
     final f1 = AccuracyMetrics.calculateF1Score([69], notes);
-    print('Sawtooth A4 F1 Score: $f1');
+          developer.log('Sawtooth A4 F1 Score: $f1');
     
     expect(notes, isNotEmpty);
     // Allow some tolerance or multiple detections if it splits the note
@@ -136,19 +137,19 @@ void main() async {
     );
     
     // 3. Verify
-    print('Detected notes count: ${detectedNotes.length}');
+          developer.log('Detected notes count: ${detectedNotes.length}');
     for (var n in detectedNotes) {
-      print('Note: ${n.midiNote} at ${n.startTime}s');
+            developer.log('Note: ${n.midiNote} at ${n.startTime}s');
     }
     
     final f1 = AccuracyMetrics.calculateF1Score(notes, detectedNotes);
-    print('C Major Scale F1 Score: $f1');
+          developer.log('C Major Scale F1 Score: $f1');
     
     // Check total duration
     if (detectedNotes.isNotEmpty) {
       final lastNote = detectedNotes.last;
       final analyzedDuration = lastNote.startTime + lastNote.duration;
-      print('Analyzed Duration: $analyzedDuration s');
+            developer.log('Analyzed Duration: $analyzedDuration s');
       // The generated audio is roughly 8 * (0.5+0.1) = 4.8s + padding
       expect(analyzedDuration, greaterThan(4.0), reason: 'Analysis should cover most of the audio file');
     }
@@ -197,13 +198,13 @@ void main() async {
     );
     
     // 3. Verify
-    print('Detected notes count: ${detectedNotes.length}');
+          developer.log('Detected notes count: ${detectedNotes.length}');
     for (var n in detectedNotes) {
-      print('Note: ${n.midiNote} at ${n.startTime}s');
+            developer.log('Note: ${n.midiNote} at ${n.startTime}s');
     }
 
     final f1 = AccuracyMetrics.calculateF1Score(chordNotes, detectedNotes);
-    print('C Major Triad F1 Score: $f1');
+          developer.log('C Major Triad F1 Score: $f1');
     
     // We expect ALL 3 notes to be detected overlapping in time
     int foundCount = 0;

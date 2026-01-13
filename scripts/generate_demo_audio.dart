@@ -1,3 +1,4 @@
+// ignore_for_file: avoid_print
 import 'dart:io';
 import 'package:pure_pitch/core/utils/audio_generator.dart';
 

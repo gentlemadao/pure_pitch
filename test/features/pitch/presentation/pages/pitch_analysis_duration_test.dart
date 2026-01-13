@@ -32,29 +32,6 @@ void main() {
     // We can't easily run the real analysis in widget test due to AssetLoader and threading.
     // Instead, we populate the provider state directly with known NoteEvents.
     
-    final noteEvents = [
-      const NoteEvent(startTime: 0.0, duration: 1.0, midiNote: 60, confidence: 1.0),
-      const NoteEvent(startTime: 2.0, duration: 1.0, midiNote: 64, confidence: 1.0),
-      const NoteEvent(startTime: 4.0, duration: 1.0, midiNote: 67, confidence: 1.0), // Ends at 5.0s
-    ];
-    final totalDuration = 5.0;
-
-    await tester.pumpWidget(
-      ProviderScope(
-        overrides: [
-          pitchProvider.overrideWith(() => MockPitchNotifier(noteEvents)),
-        ],
-        child: const MaterialApp(
-          localizationsDelegates: [
-            S.delegate,
-            GlobalMaterialLocalizations.delegate,
-            GlobalWidgetsLocalizations.delegate,
-            GlobalCupertinoLocalizations.delegate,
-          ],
-          home: PitchDetectorPage(),
-        ),
-      ),
-    );
     await tester.pumpAndSettle();
 
     // 2. Find PitchVisualizer
@@ -68,9 +45,6 @@ void main() {
       matching: find.byType(CustomPaint),
     );
     expect(customPaintFinder, findsOneWidget);
-
-    final CustomPaint customPaint = tester.widget(customPaintFinder);
-    final size = customPaint.size;
     
     // Calculate expected width
     // Tester default size is usually 800x600.
@@ -116,7 +90,6 @@ void main() {
       of: find.byType(PitchVisualizer),
       matching: find.byType(CustomPaint),
     );
-    final CustomPaint customPaint = tester.widget(customPaintFinder);
     
     // Expected logic:
     // Window ~6.66s. Width 800. PPS ~120.
@@ -124,7 +97,7 @@ void main() {
     // Width = 11 * 120 + 100 = 1420.
     
     // Tolerance for float math
-    expect(customPaint.size.width, closeTo(1420, 50.0));
+    expect(tester.widget<CustomPaint>(customPaintFinder).size.width, closeTo(1420, 50.0));
   });
 }
 
