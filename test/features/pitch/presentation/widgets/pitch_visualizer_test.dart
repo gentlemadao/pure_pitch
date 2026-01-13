@@ -7,14 +7,21 @@ void main() {
   testWidgets('PitchVisualizer renders NoteEvents', (
     WidgetTester tester,
   ) async {
-    final noteEvents = [NoteEvent(startTime: 0.0, duration: 1.0, midiNote: 60)];
+    final noteEvents = [
+      const NoteEvent(
+        startTime: 0.0,
+        duration: 1.0,
+        midiNote: 60,
+        confidence: 0.9,
+      )
+    ];
 
     await tester.pumpWidget(
       MaterialApp(
         home: Scaffold(
           body: PitchVisualizer(
-            history: [],
-            noteEvents: noteEvents, // This param doesn't exist yet
+            history: const [],
+            noteEvents: noteEvents,
           ),
         ),
       ),
