@@ -4,12 +4,5 @@ This file tracks all major tracks for the project. Each track has its own detail
 
 ---
 
-
-
-
-
-
-
-
-
-
+## [x] Track: Monophonic Stability with Hysteresis
+- **Folder:** [conductor/tracks/monophonic_stability_20260113/](conductor/tracks/monophonic_stability_20260113/)

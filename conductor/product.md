@@ -11,6 +11,7 @@ PurePitch aims to be a cross-platform, high-performance, and premium local pitch
 # Core Features
 *   **Real-time Pitch Visualization**: Providing buttery smooth pitch curves with ultra-low latency frequency capture.
 *   **Offline Audio-to-MIDI**: Leveraging the Basic Pitch model to convert external audio or local recordings into MIDI note sequences.
+*   **Smart Melody Extraction**: Advanced post-processing enforces strict monophony and removes noise to produce clean, vocal-ready pitch curves by resolving overlapping note fragments.
 *   **Session Recording & Analysis**: Support for saving vocal sessions with analytical data playback overlays.
 
 # Visual Identity & UX
