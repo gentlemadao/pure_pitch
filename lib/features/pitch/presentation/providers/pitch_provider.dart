@@ -6,10 +6,12 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:record/record.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:clock/clock.dart';
 
 import 'package:pure_pitch/core/logger/talker.dart';
 import 'package:pure_pitch/core/utils/asset_loader.dart';
 import 'package:pure_pitch/features/pitch/domain/models/pitch_state.dart';
+import 'package:pure_pitch/features/pitch/domain/services/pitch_detector_service.dart';
 import 'package:pure_pitch/src/rust/api/pitch.dart';
 
 part 'pitch_provider.g.dart';
@@ -93,7 +95,7 @@ class Pitch extends _$Pitch {
           ),
         );
 
-        _sub = stream.listen(_processAudioChunk);
+        _sub = stream.listen(processAudioChunk);
 
         state = state.copyWith(
           isRecording: true,
@@ -127,7 +129,8 @@ class Pitch extends _$Pitch {
     state = state.copyWith(visibleTimeWindow: newValue.clamp(5.0, 10.0));
   }
 
-  void _processAudioChunk(Uint8List bytes) {
+  @visibleForTesting
+  Future<void> processAudioChunk(Uint8List bytes) async {
     if (bytes.isEmpty) return;
 
     final length = bytes.length;
@@ -141,17 +144,21 @@ class Pitch extends _$Pitch {
       samples[i] = sample / 32768.0;
     }
 
-    _analyze(samples);
+    await analyze(samples);
   }
 
-  Future<void> _analyze(Float32List buffer) async {
+  @visibleForTesting
+  Future<void> analyze(Float32List buffer) async {
+    if (!ref.mounted) return;
     try {
-      final result = await detectPitchLive(
-        samples: buffer,
-        sampleRate: _sampleRate.toDouble(),
-      );
+      final result = await ref.read(pitchDetectorServiceProvider).detectLive(
+            samples: buffer,
+            sampleRate: _sampleRate.toDouble(),
+          );
 
-      final now = DateTime.now();
+      if (!ref.mounted) return;
+
+      final now = clock.now();
       final newPoint = TimestampedPitch(
         now,
         hz: result.hz,
@@ -159,9 +166,8 @@ class Pitch extends _$Pitch {
         clarity: result.clarity,
       );
 
-      final cutoff = now.subtract(const Duration(seconds: 6));
       final newHistory = [
-        ...state.history.where((p) => p.time.isAfter(cutoff)),
+        ...state.history,
         newPoint,
       ];
 
