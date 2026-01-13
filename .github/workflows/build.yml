@@ -33,8 +33,13 @@ jobs:
       - name: Build Rust Library
         run: cd rust && cargo build
 
+      - name: Setup Dynamic Libraries
+        run: ./scripts/download_libs.sh linux
+
       - name: Run Rust tests
-        run: cd rust && cargo test
+        run: |
+          export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$(pwd)/linux/lib
+          cd rust && cargo test
 
       - name: Verify formatting
         run: dart format --output=none --set-exit-if-changed lib test integration_test
@@ -43,4 +48,6 @@ jobs:
         run: flutter analyze
 
       - name: Run tests
-        run: flutter test
+        run: |
+          export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$(pwd)/linux/lib
+          flutter test
