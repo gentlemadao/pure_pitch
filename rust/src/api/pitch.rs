@@ -179,17 +179,40 @@ fn preprocess_chunk(chunk: &[f32]) -> Array3<f32> {
 }
 
 fn decode_and_resample(path: &str, target_sample_rate: u32) -> Result<Vec<f32>> {
-    let src = File::open(path)?;
-    let mss = MediaSourceStream::new(Box::new(src), Default::default());
+    use std::io::Read;
+    use symphonia::core::io::MediaSourceStreamOptions;
+
+    // Read the entire file into memory to ensure reliable seeking on Android
+    let mut file = File::open(path)?;
+    let mut buffer = Vec::new();
+    file.read_to_end(&mut buffer)?;
+
+    // Increase buffer size to handle large metadata tags or cover art
+    let mss_opts = MediaSourceStreamOptions {
+        buffer_len: 512 * 1024, // 512 KB
+    };
+    let mss = MediaSourceStream::new(Box::new(std::io::Cursor::new(buffer)), mss_opts);
     let mut hint = Hint::new();
-    hint.with_extension("mp3"); // Should be dynamic based on extension
+
+    if let Some(ext) = std::path::Path::new(path)
+        .extension()
+        .and_then(|s| s.to_str())
+    {
+        hint.with_extension(ext);
+    }
+
+    let format_opts = FormatOptions {
+        enable_gapless: true,
+        ..Default::default()
+    };
 
     let probed = symphonia::default::get_probe().format(
         &hint,
         mss,
-        &FormatOptions::default(),
+        &format_opts,
         &MetadataOptions::default(),
     )?;
+
     let mut format = probed.format;
     let track = format
         .tracks()
@@ -205,37 +228,61 @@ fn decode_and_resample(path: &str, target_sample_rate: u32) -> Result<Vec<f32>> 
     let mut samples: Vec<f32> = Vec::new();
     let original_sample_rate = codec_params.sample_rate.unwrap_or(44100);
 
-    while let Ok(packet) = format.next_packet() {
+    // Resilient decoding loop: skip bad packets instead of failing the whole process
+    loop {
+        let packet = match format.next_packet() {
+            Ok(packet) => packet,
+            Err(symphonia::core::errors::Error::IoError(ref e))
+                if e.kind() == std::io::ErrorKind::UnexpectedEof =>
+            {
+                break;
+            }
+            Err(e) => {
+                log::warn!("Format error: {}, skipping packet", e);
+                continue;
+            }
+        };
+
         if packet.track_id() != track_id {
             continue;
         }
 
-        let decoded = decoder.decode(&packet)?;
-
-        match decoded {
-            AudioBufferRef::F32(buf) => {
-                for i in 0..buf.frames() {
-                    let mut sum = 0.0;
-                    for chan in 0..buf.spec().channels.count() {
-                        sum += buf.chan(chan)[i];
+        match decoder.decode(&packet) {
+            Ok(decoded) => match decoded {
+                AudioBufferRef::F32(buf) => {
+                    for i in 0..buf.frames() {
+                        let mut sum = 0.0;
+                        for chan in 0..buf.spec().channels.count() {
+                            sum += buf.chan(chan)[i];
+                        }
+                        samples.push(sum / buf.spec().channels.count() as f32);
                     }
-                    samples.push(sum / buf.spec().channels.count() as f32);
                 }
-            }
-            AudioBufferRef::S16(buf) => {
-                for i in 0..buf.frames() {
-                    let mut sum = 0.0;
-                    for chan in 0..buf.spec().channels.count() {
-                        sum += buf.chan(chan)[i] as f32 / 32768.0;
+                AudioBufferRef::S16(buf) => {
+                    for i in 0..buf.frames() {
+                        let mut sum = 0.0;
+                        for chan in 0..buf.spec().channels.count() {
+                            sum += buf.chan(chan)[i] as f32 / 32768.0;
+                        }
+                        samples.push(sum / buf.spec().channels.count() as f32);
                     }
-                    samples.push(sum / buf.spec().channels.count() as f32);
                 }
+                _ => {
+                    log::warn!("Unsupported audio buffer type");
+                }
+            },
+            Err(symphonia::core::errors::Error::DecodeError(e)) => {
+                log::warn!("Decode error: {}, skipping packet", e);
+                continue;
             }
-            _ => {
-                // TODO: Support other bit depths if needed
-                log::warn!("Unsupported audio buffer type");
+            Err(e) => {
+                return Err(e.into());
             }
         }
+    }
+
+    if samples.is_empty() {
+        return Err(anyhow::anyhow!("No audio samples were decoded"));
     }
 
     if original_sample_rate != target_sample_rate {
