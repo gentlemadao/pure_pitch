@@ -38,11 +38,23 @@ void main() {
     // 1. Setup mock data
     final noteEvents = [
       const NoteEvent(
-          startTime: 0.0, duration: 1.0, midiNote: 60, confidence: 1.0),
+        startTime: 0.0,
+        duration: 1.0,
+        midiNote: 60,
+        confidence: 1.0,
+      ),
       const NoteEvent(
-          startTime: 2.0, duration: 1.0, midiNote: 64, confidence: 1.0),
+        startTime: 2.0,
+        duration: 1.0,
+        midiNote: 64,
+        confidence: 1.0,
+      ),
       const NoteEvent(
-          startTime: 4.0, duration: 1.0, midiNote: 67, confidence: 1.0), // Ends at 5.0s
+        startTime: 4.0,
+        duration: 1.0,
+        midiNote: 67,
+        confidence: 1.0,
+      ), // Ends at 5.0s
     ];
 
     await tester.pumpWidget(

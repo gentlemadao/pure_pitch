@@ -141,6 +141,7 @@ Before marking any task complete, verify:
 - [ ] All tests pass
 - [ ] Code coverage meets requirements (>80%)
 - [ ] Code follows project's code style guidelines (as defined in `code_styleguides/`)
+- [ ] Code is formatted correctly (`dart format --output=none --set-exit-if-changed .` and `cargo fmt --check`)
 - [ ] All public functions/methods are documented (e.g., docstrings, JSDoc, GoDoc)
 - [ ] Type safety is enforced (e.g., type hints, TypeScript types, Go types)
 - [ ] No linting or static analysis errors (using the project's configured tools)
@@ -168,9 +169,17 @@ Before marking any task complete, verify:
 
 ### Before Committing
 ```bash
-# Example: Commands to run all pre-commit checks (e.g., format, lint, type check, run tests)
-# e.g., for a Node.js project: npm run check
-# e.g., for a Go project: make check (if a Makefile exists)
+# Run all pre-commit checks
+# 1. Format check (Indentation)
+dart format --output=none --set-exit-if-changed lib test integration_test
+cd rust && cargo fmt --check && cd ..
+
+# 2. Lint & Type check
+flutter analyze
+
+# 3. Run tests
+flutter test
+cd rust && cargo test
 ```
 
 ## Testing Requirements
