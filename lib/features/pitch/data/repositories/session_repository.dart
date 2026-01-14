@@ -73,6 +73,7 @@ class SessionRepository {
     required int fileSize,
     required double durationSeconds,
     required List<rust.NoteEvent> noteEvents,
+    String? accompanimentPath,
   }) async {
     await _db.transaction(() async {
       // Check if exists and delete (overwrite strategy)
@@ -90,6 +91,7 @@ class SessionRepository {
             fileSize: fileSize,
             durationSeconds: durationSeconds,
             createdAt: DateTime.now(),
+            accompanimentPath: Value(accompanimentPath),
           ));
 
       for (final event in noteEvents) {

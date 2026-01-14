@@ -23,7 +23,7 @@
 - [x] Task: Implement Load & Delete functionality in `SessionsList`
 - [x] Task: Conductor - User Manual Verification 'Phase 2.5: Saved Sessions UI' (Protocol in workflow.md) (846eafe)
 
-## Phase 3: Audio Monitoring (Karaoke Mode)
+## Phase 3: Audio Monitoring (Karaoke Mode) [checkpoint: 52524c4]
 - [x] Task: Update Tech Stack - Add `audioplayers` or `just_audio` (Protocol in workflow.md)
 - [x] Task: Write failing tests for Audio Playback Sync (Red Phase)
 - [x] Task: Implement Audio Player Service and Karaoke Toggle UI (Green Phase)

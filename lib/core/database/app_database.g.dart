@@ -76,6 +76,18 @@ class $SessionsTable extends Sessions with TableInfo<$SessionsTable, Session> {
     type: DriftSqlType.dateTime,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _accompanimentPathMeta = const VerificationMeta(
+    'accompanimentPath',
+  );
+  @override
+  late final GeneratedColumn<String> accompanimentPath =
+      GeneratedColumn<String>(
+        'accompaniment_path',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -84,6 +96,7 @@ class $SessionsTable extends Sessions with TableInfo<$SessionsTable, Session> {
     fileSize,
     durationSeconds,
     createdAt,
+    accompanimentPath,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -143,6 +156,15 @@ class $SessionsTable extends Sessions with TableInfo<$SessionsTable, Session> {
     } else if (isInserting) {
       context.missing(_createdAtMeta);
     }
+    if (data.containsKey('accompaniment_path')) {
+      context.handle(
+        _accompanimentPathMeta,
+        accompanimentPath.isAcceptableOrUnknown(
+          data['accompaniment_path']!,
+          _accompanimentPathMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -176,6 +198,10 @@ class $SessionsTable extends Sessions with TableInfo<$SessionsTable, Session> {
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
       )!,
+      accompanimentPath: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}accompaniment_path'],
+      ),
     );
   }
 
@@ -192,6 +218,7 @@ class Session extends DataClass implements Insertable<Session> {
   final int fileSize;
   final double durationSeconds;
   final DateTime createdAt;
+  final String? accompanimentPath;
   const Session({
     required this.id,
     required this.filePath,
@@ -199,6 +226,7 @@ class Session extends DataClass implements Insertable<Session> {
     required this.fileSize,
     required this.durationSeconds,
     required this.createdAt,
+    this.accompanimentPath,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -209,6 +237,9 @@ class Session extends DataClass implements Insertable<Session> {
     map['file_size'] = Variable<int>(fileSize);
     map['duration_seconds'] = Variable<double>(durationSeconds);
     map['created_at'] = Variable<DateTime>(createdAt);
+    if (!nullToAbsent || accompanimentPath != null) {
+      map['accompaniment_path'] = Variable<String>(accompanimentPath);
+    }
     return map;
   }
 
@@ -220,6 +251,9 @@ class Session extends DataClass implements Insertable<Session> {
       fileSize: Value(fileSize),
       durationSeconds: Value(durationSeconds),
       createdAt: Value(createdAt),
+      accompanimentPath: accompanimentPath == null && nullToAbsent
+          ? const Value.absent()
+          : Value(accompanimentPath),
     );
   }
 
@@ -235,6 +269,9 @@ class Session extends DataClass implements Insertable<Session> {
       fileSize: serializer.fromJson<int>(json['fileSize']),
       durationSeconds: serializer.fromJson<double>(json['durationSeconds']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      accompanimentPath: serializer.fromJson<String?>(
+        json['accompanimentPath'],
+      ),
     );
   }
   @override
@@ -247,6 +284,7 @@ class Session extends DataClass implements Insertable<Session> {
       'fileSize': serializer.toJson<int>(fileSize),
       'durationSeconds': serializer.toJson<double>(durationSeconds),
       'createdAt': serializer.toJson<DateTime>(createdAt),
+      'accompanimentPath': serializer.toJson<String?>(accompanimentPath),
     };
   }
 
@@ -257,6 +295,7 @@ class Session extends DataClass implements Insertable<Session> {
     int? fileSize,
     double? durationSeconds,
     DateTime? createdAt,
+    Value<String?> accompanimentPath = const Value.absent(),
   }) => Session(
     id: id ?? this.id,
     filePath: filePath ?? this.filePath,
@@ -264,6 +303,9 @@ class Session extends DataClass implements Insertable<Session> {
     fileSize: fileSize ?? this.fileSize,
     durationSeconds: durationSeconds ?? this.durationSeconds,
     createdAt: createdAt ?? this.createdAt,
+    accompanimentPath: accompanimentPath.present
+        ? accompanimentPath.value
+        : this.accompanimentPath,
   );
   Session copyWithCompanion(SessionsCompanion data) {
     return Session(
@@ -275,6 +317,9 @@ class Session extends DataClass implements Insertable<Session> {
           ? data.durationSeconds.value
           : this.durationSeconds,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      accompanimentPath: data.accompanimentPath.present
+          ? data.accompanimentPath.value
+          : this.accompanimentPath,
     );
   }
 
@@ -286,14 +331,22 @@ class Session extends DataClass implements Insertable<Session> {
           ..write('fileName: $fileName, ')
           ..write('fileSize: $fileSize, ')
           ..write('durationSeconds: $durationSeconds, ')
-          ..write('createdAt: $createdAt')
+          ..write('createdAt: $createdAt, ')
+          ..write('accompanimentPath: $accompanimentPath')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode =>
-      Object.hash(id, filePath, fileName, fileSize, durationSeconds, createdAt);
+  int get hashCode => Object.hash(
+    id,
+    filePath,
+    fileName,
+    fileSize,
+    durationSeconds,
+    createdAt,
+    accompanimentPath,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -303,7 +356,8 @@ class Session extends DataClass implements Insertable<Session> {
           other.fileName == this.fileName &&
           other.fileSize == this.fileSize &&
           other.durationSeconds == this.durationSeconds &&
-          other.createdAt == this.createdAt);
+          other.createdAt == this.createdAt &&
+          other.accompanimentPath == this.accompanimentPath);
 }
 
 class SessionsCompanion extends UpdateCompanion<Session> {
@@ -313,6 +367,7 @@ class SessionsCompanion extends UpdateCompanion<Session> {
   final Value<int> fileSize;
   final Value<double> durationSeconds;
   final Value<DateTime> createdAt;
+  final Value<String?> accompanimentPath;
   const SessionsCompanion({
     this.id = const Value.absent(),
     this.filePath = const Value.absent(),
@@ -320,6 +375,7 @@ class SessionsCompanion extends UpdateCompanion<Session> {
     this.fileSize = const Value.absent(),
     this.durationSeconds = const Value.absent(),
     this.createdAt = const Value.absent(),
+    this.accompanimentPath = const Value.absent(),
   });
   SessionsCompanion.insert({
     this.id = const Value.absent(),
@@ -328,6 +384,7 @@ class SessionsCompanion extends UpdateCompanion<Session> {
     required int fileSize,
     required double durationSeconds,
     required DateTime createdAt,
+    this.accompanimentPath = const Value.absent(),
   }) : filePath = Value(filePath),
        fileName = Value(fileName),
        fileSize = Value(fileSize),
@@ -340,6 +397,7 @@ class SessionsCompanion extends UpdateCompanion<Session> {
     Expression<int>? fileSize,
     Expression<double>? durationSeconds,
     Expression<DateTime>? createdAt,
+    Expression<String>? accompanimentPath,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -348,6 +406,7 @@ class SessionsCompanion extends UpdateCompanion<Session> {
       if (fileSize != null) 'file_size': fileSize,
       if (durationSeconds != null) 'duration_seconds': durationSeconds,
       if (createdAt != null) 'created_at': createdAt,
+      if (accompanimentPath != null) 'accompaniment_path': accompanimentPath,
     });
   }
 
@@ -358,6 +417,7 @@ class SessionsCompanion extends UpdateCompanion<Session> {
     Value<int>? fileSize,
     Value<double>? durationSeconds,
     Value<DateTime>? createdAt,
+    Value<String?>? accompanimentPath,
   }) {
     return SessionsCompanion(
       id: id ?? this.id,
@@ -366,6 +426,7 @@ class SessionsCompanion extends UpdateCompanion<Session> {
       fileSize: fileSize ?? this.fileSize,
       durationSeconds: durationSeconds ?? this.durationSeconds,
       createdAt: createdAt ?? this.createdAt,
+      accompanimentPath: accompanimentPath ?? this.accompanimentPath,
     );
   }
 
@@ -390,6 +451,9 @@ class SessionsCompanion extends UpdateCompanion<Session> {
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
+    if (accompanimentPath.present) {
+      map['accompaniment_path'] = Variable<String>(accompanimentPath.value);
+    }
     return map;
   }
 
@@ -401,14 +465,15 @@ class SessionsCompanion extends UpdateCompanion<Session> {
           ..write('fileName: $fileName, ')
           ..write('fileSize: $fileSize, ')
           ..write('durationSeconds: $durationSeconds, ')
-          ..write('createdAt: $createdAt')
+          ..write('createdAt: $createdAt, ')
+          ..write('accompanimentPath: $accompanimentPath')
           ..write(')'))
         .toString();
   }
 }
 
 class $NoteEventsTable extends NoteEvents
-    with TableInfo<$NoteEventsTable, DbNoteEvent> {
+    with TableInfo<$NoteEventsTable, NoteEvent> {
   @override
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
@@ -500,7 +565,7 @@ class $NoteEventsTable extends NoteEvents
   static const String $name = 'note_events';
   @override
   VerificationContext validateIntegrity(
-    Insertable<DbNoteEvent> instance, {
+    Insertable<NoteEvent> instance, {
     bool isInserting = false,
   }) {
     final context = VerificationContext();
@@ -554,9 +619,9 @@ class $NoteEventsTable extends NoteEvents
   @override
   Set<GeneratedColumn> get $primaryKey => {id};
   @override
-  DbNoteEvent map(Map<String, dynamic> data, {String? tablePrefix}) {
+  NoteEvent map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
-    return DbNoteEvent(
+    return NoteEvent(
       id: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}id'],
@@ -590,14 +655,14 @@ class $NoteEventsTable extends NoteEvents
   }
 }
 
-class DbNoteEvent extends DataClass implements Insertable<DbNoteEvent> {
+class NoteEvent extends DataClass implements Insertable<NoteEvent> {
   final int id;
   final int sessionId;
   final double startTime;
   final double duration;
   final int midiNote;
   final double confidence;
-  const DbNoteEvent({
+  const NoteEvent({
     required this.id,
     required this.sessionId,
     required this.startTime,
@@ -628,12 +693,12 @@ class DbNoteEvent extends DataClass implements Insertable<DbNoteEvent> {
     );
   }
 
-  factory DbNoteEvent.fromJson(
+  factory NoteEvent.fromJson(
     Map<String, dynamic> json, {
     ValueSerializer? serializer,
   }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
-    return DbNoteEvent(
+    return NoteEvent(
       id: serializer.fromJson<int>(json['id']),
       sessionId: serializer.fromJson<int>(json['sessionId']),
       startTime: serializer.fromJson<double>(json['startTime']),
@@ -655,14 +720,14 @@ class DbNoteEvent extends DataClass implements Insertable<DbNoteEvent> {
     };
   }
 
-  DbNoteEvent copyWith({
+  NoteEvent copyWith({
     int? id,
     int? sessionId,
     double? startTime,
     double? duration,
     int? midiNote,
     double? confidence,
-  }) => DbNoteEvent(
+  }) => NoteEvent(
     id: id ?? this.id,
     sessionId: sessionId ?? this.sessionId,
     startTime: startTime ?? this.startTime,
@@ -670,8 +735,8 @@ class DbNoteEvent extends DataClass implements Insertable<DbNoteEvent> {
     midiNote: midiNote ?? this.midiNote,
     confidence: confidence ?? this.confidence,
   );
-  DbNoteEvent copyWithCompanion(NoteEventsCompanion data) {
-    return DbNoteEvent(
+  NoteEvent copyWithCompanion(NoteEventsCompanion data) {
+    return NoteEvent(
       id: data.id.present ? data.id.value : this.id,
       sessionId: data.sessionId.present ? data.sessionId.value : this.sessionId,
       startTime: data.startTime.present ? data.startTime.value : this.startTime,
@@ -685,7 +750,7 @@ class DbNoteEvent extends DataClass implements Insertable<DbNoteEvent> {
 
   @override
   String toString() {
-    return (StringBuffer('DbNoteEvent(')
+    return (StringBuffer('NoteEvent(')
           ..write('id: $id, ')
           ..write('sessionId: $sessionId, ')
           ..write('startTime: $startTime, ')
@@ -702,7 +767,7 @@ class DbNoteEvent extends DataClass implements Insertable<DbNoteEvent> {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      (other is DbNoteEvent &&
+      (other is NoteEvent &&
           other.id == this.id &&
           other.sessionId == this.sessionId &&
           other.startTime == this.startTime &&
@@ -711,7 +776,7 @@ class DbNoteEvent extends DataClass implements Insertable<DbNoteEvent> {
           other.confidence == this.confidence);
 }
 
-class NoteEventsCompanion extends UpdateCompanion<DbNoteEvent> {
+class NoteEventsCompanion extends UpdateCompanion<NoteEvent> {
   final Value<int> id;
   final Value<int> sessionId;
   final Value<double> startTime;
@@ -738,7 +803,7 @@ class NoteEventsCompanion extends UpdateCompanion<DbNoteEvent> {
        duration = Value(duration),
        midiNote = Value(midiNote),
        confidence = Value(confidence);
-  static Insertable<DbNoteEvent> custom({
+  static Insertable<NoteEvent> custom({
     Expression<int>? id,
     Expression<int>? sessionId,
     Expression<double>? startTime,
@@ -842,6 +907,7 @@ typedef $$SessionsTableCreateCompanionBuilder =
       required int fileSize,
       required double durationSeconds,
       required DateTime createdAt,
+      Value<String?> accompanimentPath,
     });
 typedef $$SessionsTableUpdateCompanionBuilder =
     SessionsCompanion Function({
@@ -851,13 +917,14 @@ typedef $$SessionsTableUpdateCompanionBuilder =
       Value<int> fileSize,
       Value<double> durationSeconds,
       Value<DateTime> createdAt,
+      Value<String?> accompanimentPath,
     });
 
 final class $$SessionsTableReferences
     extends BaseReferences<_$AppDatabase, $SessionsTable, Session> {
   $$SessionsTableReferences(super.$_db, super.$_table, super.$_typedResult);
 
-  static MultiTypedResultKey<$NoteEventsTable, List<DbNoteEvent>>
+  static MultiTypedResultKey<$NoteEventsTable, List<NoteEvent>>
   _noteEventsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
     db.noteEvents,
     aliasName: $_aliasNameGenerator(db.sessions.id, db.noteEvents.sessionId),
@@ -912,6 +979,11 @@ class $$SessionsTableFilterComposer
 
   ColumnFilters<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get accompanimentPath => $composableBuilder(
+    column: $table.accompanimentPath,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -979,6 +1051,11 @@ class $$SessionsTableOrderingComposer
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get accompanimentPath => $composableBuilder(
+    column: $table.accompanimentPath,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$SessionsTableAnnotationComposer
@@ -1009,6 +1086,11 @@ class $$SessionsTableAnnotationComposer
 
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<String> get accompanimentPath => $composableBuilder(
+    column: $table.accompanimentPath,
+    builder: (column) => column,
+  );
 
   Expression<T> noteEventsRefs<T extends Object>(
     Expression<T> Function($$NoteEventsTableAnnotationComposer a) f,
@@ -1070,6 +1152,7 @@ class $$SessionsTableTableManager
                 Value<int> fileSize = const Value.absent(),
                 Value<double> durationSeconds = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
+                Value<String?> accompanimentPath = const Value.absent(),
               }) => SessionsCompanion(
                 id: id,
                 filePath: filePath,
@@ -1077,6 +1160,7 @@ class $$SessionsTableTableManager
                 fileSize: fileSize,
                 durationSeconds: durationSeconds,
                 createdAt: createdAt,
+                accompanimentPath: accompanimentPath,
               ),
           createCompanionCallback:
               ({
@@ -1086,6 +1170,7 @@ class $$SessionsTableTableManager
                 required int fileSize,
                 required double durationSeconds,
                 required DateTime createdAt,
+                Value<String?> accompanimentPath = const Value.absent(),
               }) => SessionsCompanion.insert(
                 id: id,
                 filePath: filePath,
@@ -1093,6 +1178,7 @@ class $$SessionsTableTableManager
                 fileSize: fileSize,
                 durationSeconds: durationSeconds,
                 createdAt: createdAt,
+                accompanimentPath: accompanimentPath,
               ),
           withReferenceMapper: (p0) => p0
               .map(
@@ -1113,7 +1199,7 @@ class $$SessionsTableTableManager
                     await $_getPrefetchedData<
                       Session,
                       $SessionsTable,
-                      DbNoteEvent
+                      NoteEvent
                     >(
                       currentTable: table,
                       referencedTable: $$SessionsTableReferences
@@ -1169,7 +1255,7 @@ typedef $$NoteEventsTableUpdateCompanionBuilder =
     });
 
 final class $$NoteEventsTableReferences
-    extends BaseReferences<_$AppDatabase, $NoteEventsTable, DbNoteEvent> {
+    extends BaseReferences<_$AppDatabase, $NoteEventsTable, NoteEvent> {
   $$NoteEventsTableReferences(super.$_db, super.$_table, super.$_typedResult);
 
   static $SessionsTable _sessionIdTable(_$AppDatabase db) =>
@@ -1363,14 +1449,14 @@ class $$NoteEventsTableTableManager
         RootTableManager<
           _$AppDatabase,
           $NoteEventsTable,
-          DbNoteEvent,
+          NoteEvent,
           $$NoteEventsTableFilterComposer,
           $$NoteEventsTableOrderingComposer,
           $$NoteEventsTableAnnotationComposer,
           $$NoteEventsTableCreateCompanionBuilder,
           $$NoteEventsTableUpdateCompanionBuilder,
-          (DbNoteEvent, $$NoteEventsTableReferences),
-          DbNoteEvent,
+          (NoteEvent, $$NoteEventsTableReferences),
+          NoteEvent,
           PrefetchHooks Function({bool sessionId})
         > {
   $$NoteEventsTableTableManager(_$AppDatabase db, $NoteEventsTable table)
@@ -1473,14 +1559,14 @@ typedef $$NoteEventsTableProcessedTableManager =
     ProcessedTableManager<
       _$AppDatabase,
       $NoteEventsTable,
-      DbNoteEvent,
+      NoteEvent,
       $$NoteEventsTableFilterComposer,
       $$NoteEventsTableOrderingComposer,
       $$NoteEventsTableAnnotationComposer,
       $$NoteEventsTableCreateCompanionBuilder,
       $$NoteEventsTableUpdateCompanionBuilder,
-      (DbNoteEvent, $$NoteEventsTableReferences),
-      DbNoteEvent,
+      (NoteEvent, $$NoteEventsTableReferences),
+      NoteEvent,
       PrefetchHooks Function({bool sessionId})
     >;
 

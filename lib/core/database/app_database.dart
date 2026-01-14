@@ -16,9 +16,9 @@ class Sessions extends Table {
   IntColumn get fileSize => integer()();
   RealColumn get durationSeconds => real()();
   DateTimeColumn get createdAt => dateTime()();
+  TextColumn get accompanimentPath => text().nullable()();
 }
 
-@DataClassName('DbNoteEvent')
 class NoteEvents extends Table {
   IntColumn get id => integer().autoIncrement()();
   IntColumn get sessionId => integer().references(Sessions, #id, onDelete: KeyAction.cascade)();
@@ -33,12 +33,17 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? e]) : super(e ?? _openConnection());
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
     beforeOpen: (details) async {
       await customStatement('PRAGMA foreign_keys = ON');
+    },
+    onUpgrade: (m, from, to) async {
+      if (from < 2) {
+        await m.addColumn(sessions, sessions.accompanimentPath);
+      }
     },
   );
 }
