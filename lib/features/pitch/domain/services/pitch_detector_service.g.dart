@@ -55,4 +55,4 @@ final class PitchDetectorServiceProvider
 }
 
 String _$pitchDetectorServiceHash() =>
-    r'0b5d82c8e504845825179d4913c5730ee095e35f';
+    r'07f505456192c01d5ecca4e1efcd455753040755';

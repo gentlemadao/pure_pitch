@@ -9,16 +9,28 @@ PurePitch aims to be a cross-platform, high-performance, and premium local pitch
 *   **Music Enthusiasts**: Exploring personal vocal range and recording/tracking pitch performance over time.
 
 # Core Features
-*   **Real-time Pitch Visualization**: Providing buttery smooth pitch curves with ultra-low latency frequency capture.
-*   **Offline Audio-to-MIDI**: Leveraging the Basic Pitch model to convert external audio or local recordings into MIDI note sequences.
-*   **High-Precision & Stable Analysis**: Leveraging the Basic Pitch model combined with hysteresis/inertia algorithms to provide professional, continuous note extraction, preventing melody fragmentation.
-*   **Session Recording & Analysis**: Support for saving vocal sessions with analytical data playback overlays.
+
+* **Real-time Pitch Visualization**: Providing buttery smooth, persistent pitch curves with ultra-low latency frequency capture and wall-clock time anchoring.
+
+* **Offline Audio-to-MIDI**: Leveraging the Basic Pitch model to convert external audio or local recordings into MIDI note sequences.
+
+* **High-Precision & Stable Analysis**: Leveraging the Basic Pitch model combined with hysteresis/inertia algorithms to provide professional, continuous note extraction, preventing melody fragmentation.
+
+* **Session Recording & Analysis**: Support for saving vocal sessions with analytical data playback overlays.
+
+
 
 # Visual Identity & UX
-*   **Immersive Premium Feel**: A professional modern interface combined with subtle background textures and fluid motion transitions.
-*   **Glowing Interactive Elements**: Key controls and pitch curves feature "glowing" visual effects to enhance tech-immersion.
-*   **Buttery Smooth Performance**: Optimized for high refresh rate displays, ensuring pitch curves flow like silk.
-*   **Adaptive Time Scaling**: The pitch visualization automatically scales between 5 and 10 seconds based on the screen width, with manual zoom controls for a tailored experience.
+
+* **Immersive Premium Feel**: A professional modern interface combined with subtle background textures and fluid motion transitions.
+
+* **Glowing Interactive Elements**: Key controls and pitch curves feature "glowing" visual effects to enhance tech-immersion.
+
+* **Buttery Smooth Performance**: Optimized for high refresh rate displays, ensuring pitch curves flow like silk.
+
+* **Adaptive Time Scaling**: The pitch visualization automatically scales between 5 and 10 seconds based on the screen width, with manual zoom controls and persistent session history.
+
+* **Continuous Session Review**: Users can scroll back through their entire performance history after a recording session ends.
 
 # Competitive Advantage
 *   **Privacy & Performance**: All AI inference and processing happen locally on the device. Data never leaves the machine. Extreme performance is achieved through the Rust core.
