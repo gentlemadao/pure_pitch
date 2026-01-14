@@ -15,13 +15,14 @@
 
 ## Frontend (Flutter)
 *   **Framework**: Flutter
+*   **Audio Playback**: `just_audio` - Robust cross-platform audio player for karaoke mode.
 *   **State Management**: `riverpod` & `riverpod_generator` - strictly using code generation for type safety.
 *   **Routing**: `go_router` & `go_router_builder` - Declarative routing with code generation.
 *   **Data Modeling**: `freezed` & `json_serializable` - Immutable data classes (mandatory `abstract class` or `sealed class`).
 *   **Localization**: `intl` - Mandatory for all UI strings (ARB based).
 *   **Local Storage**:
     *   Key-Value: `shared_preferences` (via StorageService).
-    *   Database: `sqflite` (via DBManager).
+    *   Database: `drift` (via AppDatabase) - Type-safe relational persistence.
 
 ## Backend (Rust Core)
 *   **Language**: Pure Rust (No C/C++ bindings unless wrapped in safe Rust, NO Python).

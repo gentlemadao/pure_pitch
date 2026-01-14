@@ -79,6 +79,18 @@ class _PitchDetectorPageState extends ConsumerState<PitchDetectorPage>
         title: Text(context.l10n.appTitle),
         actions: [
           IconButton(
+            onPressed: () => ref
+                .read(pitchProvider.notifier)
+                .toggleMonitoring(!pitchState.isMonitoringEnabled),
+            icon: Icon(
+              pitchState.isMonitoringEnabled ? Icons.headset : Icons.headset_off,
+              color: pitchState.isMonitoringEnabled
+                  ? Colors.cyanAccent
+                  : Colors.white24,
+            ),
+            tooltip: 'Karaoke Mode',
+          ),
+          IconButton(
             onPressed: () => Navigator.of(context).push(
               MaterialPageRoute(builder: (context) => const SessionsListPage()),
             ),

@@ -10,6 +10,7 @@ import 'package:record/record.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:clock/clock.dart';
 import 'package:path/path.dart' as p;
+import 'package:just_audio/just_audio.dart';
 
 import 'package:pure_pitch/core/logger/talker.dart';
 import 'package:pure_pitch/core/utils/asset_loader.dart';
@@ -24,6 +25,7 @@ part 'pitch_provider.g.dart';
 @riverpod
 class Pitch extends _$Pitch {
   AudioRecorder? _recorder;
+  AudioPlayer? _audioPlayer;
   StreamSubscription? _sub;
   Timer? _refinementTimer;
   static const int _sampleRate = 44100;
@@ -36,8 +38,14 @@ class Pitch extends _$Pitch {
       _sub?.cancel();
       _refinementTimer?.cancel();
       _recorder?.dispose();
+      _audioPlayer?.dispose();
     });
     return const PitchState();
+  }
+
+  AudioPlayer get _player {
+    _audioPlayer ??= AudioPlayer();
+    return _audioPlayer!;
   }
 
   Future<void> analyzeFile() async {
@@ -77,6 +85,7 @@ class Pitch extends _$Pitch {
           state = state.copyWith(
             isAnalyzing: false,
             analysisResults: cached.events,
+            currentFilePath: audioPath,
           );
         }
         return;
@@ -107,7 +116,11 @@ class Pitch extends _$Pitch {
       );
 
       if (ref.mounted) {
-        state = state.copyWith(isAnalyzing: false, analysisResults: noteEvents);
+        state = state.copyWith(
+          isAnalyzing: false,
+          analysisResults: noteEvents,
+          currentFilePath: audioPath,
+        );
       }
     } catch (e) {
       if (ref.mounted) {
@@ -143,6 +156,10 @@ class Pitch extends _$Pitch {
         _sub = stream.listen(processAudioChunk);
         _startRefinementTimer();
 
+        if (state.isMonitoringEnabled) {
+          _playOriginalAudio();
+        }
+
         state = state.copyWith(
           isRecording: true,
           history: [],
@@ -164,6 +181,7 @@ class Pitch extends _$Pitch {
       await _sub?.cancel();
       _sub = null;
       _stopRefinementTimer();
+      _stopOriginalAudio();
       // Final refinement
       _refineHistory();
     } catch (e) {
@@ -225,13 +243,33 @@ class Pitch extends _$Pitch {
     state = state.copyWith(errorMessage: null);
   }
 
+  void toggleMonitoring(bool enabled) {
+    state = state.copyWith(isMonitoringEnabled: enabled);
+  }
+
   void loadSession(SessionWithEvents sessionWithEvents) {
     state = state.copyWith(
       analysisResults: sessionWithEvents.events,
+      currentFilePath: sessionWithEvents.session.filePath,
       isRecording: false,
       history: [],
       currentPitch: null,
     );
+  }
+
+  Future<void> _playOriginalAudio() async {
+    if (state.currentFilePath != null) {
+      try {
+        await _player.setFilePath(state.currentFilePath!);
+        await _player.play();
+      } catch (e) {
+        talker.error('Failed to play original audio', e);
+      }
+    }
+  }
+
+  void _stopOriginalAudio() {
+    _audioPlayer?.stop();
   }
 
   @visibleForTesting

@@ -25,5 +25,7 @@ abstract class PitchState with _$PitchState {
     @Default([]) List<NoteEvent> analysisResults,
     String? errorMessage,
     @Default(5.0) double visibleTimeWindow,
+    String? currentFilePath,
+    @Default(false) bool isMonitoringEnabled,
   }) = _PitchState;
 }

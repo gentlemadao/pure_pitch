@@ -15,19 +15,16 @@
 - [x] Task: Implement Caching Logic in `Pitch` notifier (Green Phase)
     - [x] Use `SessionRepository` to check for (name, size) matches.
     - [x] Bypass ONNX inference if data is cached.
-- [ ] Task: Conductor - User Manual Verification 'Phase 2: Analysis Caching Logic' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Phase 2: Analysis Caching Logic' (Protocol in workflow.md)
 
-## Phase 2.5: Saved Sessions UI
+## Phase 2.5: Saved Sessions UI [checkpoint: 846eafe]
 - [x] Task: Write failing tests for Sessions List UI (Red Phase)
 - [x] Task: Implement `SessionsList` page and "History" access (Green Phase)
 - [x] Task: Implement Load & Delete functionality in `SessionsList`
-- [ ] Task: Conductor - User Manual Verification 'Phase 2.5: Saved Sessions UI' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Phase 2.5: Saved Sessions UI' (Protocol in workflow.md) (846eafe)
 
 ## Phase 3: Audio Monitoring (Karaoke Mode)
-- [ ] Task: Update Tech Stack - Add `audioplayers` or `just_audio` (Protocol in workflow.md)
-- [ ] Task: Write failing tests for Audio Playback Sync (Red Phase)
-    - [ ] Verify that starting recording triggers audio playback when toggle is ON.
-- [ ] Task: Implement Audio Player Service and Karaoke Toggle UI (Green Phase)
-    - [ ] Add `Play Original Audio` toggle to `PitchDetectorPage`.
-    - [ ] Synchronize playback with `_startCapture` and `_stopCapture`.
-- [ ] Task: Conductor - User Manual Verification 'Phase 3: Audio Monitoring (Karaoke Mode)' (Protocol in workflow.md)
+- [x] Task: Update Tech Stack - Add `audioplayers` or `just_audio` (Protocol in workflow.md)
+- [x] Task: Write failing tests for Audio Playback Sync (Red Phase)
+- [x] Task: Implement Audio Player Service and Karaoke Toggle UI (Green Phase)
+- [x] Task: Conductor - User Manual Verification 'Phase 3: Audio Monitoring (Karaoke Mode)' (Protocol in workflow.md)

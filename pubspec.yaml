@@ -33,6 +33,7 @@ dependencies:
   path: ^1.9.1
   drift: ^2.30.1
   sqlite3_flutter_libs: ^0.5.41
+  just_audio: ^0.10.5
 
 dev_dependencies:
   flutter_test:

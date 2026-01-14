@@ -30,9 +30,7 @@ class NoteEvents extends Table {
 
 @DriftDatabase(tables: [Sessions, NoteEvents])
 class AppDatabase extends _$AppDatabase {
-  AppDatabase([QueryExecutor? e]) : super(e ?? _openConnection()) {
-    print('DB_DEBUG: AppDatabase initialized');
-  }
+  AppDatabase([QueryExecutor? e]) : super(e ?? _openConnection());
 
   @override
   int get schemaVersion => 1;
