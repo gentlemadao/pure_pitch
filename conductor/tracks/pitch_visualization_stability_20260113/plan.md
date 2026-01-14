@@ -1,22 +1,19 @@
 # Track Plan: Persistent and Smooth Real-time Pitch Visualization
 
-## Phase 1: Persistence & Wall Clock Anchor
-- [x] Task: Write failing tests for History Persistence (Red Phase) (042b74f)
-    - [x] Verify `history` does not discard data after 6 seconds.
-- [~] Task: Implement History Persistence in `Pitch` notifier (Green Phase)
-    - [ ] Remove cutoff logic and ensure session-long data retention.
-- [ ] Task: Write failing tests for Wall Clock Rendering in `PitchVisualizer` (Red Phase)
-    - [ ] Verify X-coordinate calculation remains stable regardless of input timing.
-- [ ] Task: Implement Wall Clock Anchor in `PitchVisualizer` (Green Phase)
-    - [ ] Refactor painter to use system time for smooth, continuous flow.
-- [ ] Task: Conductor - User Manual Verification 'Phase 1: Persistence & Wall Clock Anchor' (Protocol in workflow.md)
+## Phase 1: Persistence & Wall Clock Anchor [checkpoint: 3fd394d]
+- [x] Task: Write failing tests for History Persistence (Red Phase) (3fd394d)
+- [x] Task: Implement History Persistence in `Pitch` notifier (Green Phase) (3fd394d)
+- [x] Task: Write failing tests for Wall Clock Rendering in `PitchVisualizer` (Red Phase) (3fd394d)
+- [x] Task: Implement Wall Clock Anchor in `PitchVisualizer` (Green Phase) (3fd394d)
+- [x] Task: UX Refinement - Fixed Labels & Adaptive Y-axis (3fd394d)
+- [x] Task: Conductor - User Manual Verification 'Phase 1: Persistence & Wall Clock Anchor' (Protocol in workflow.md)
 
 ## Phase 2: Smoothing Filter
-- [ ] Task: Write failing tests for Pitch Smoothing (Red Phase)
-    - [ ] Simulate noisy data and assert that the output curve is dampened.
-- [ ] Task: Implement EMA Smoothing Filter in `Pitch` notifier (Green Phase)
-    - [ ] Add configurable Exponential Moving Average filter to raw frequency stream.
-- [ ] Task: Conductor - User Manual Verification 'Phase 2: Smoothing Filter' (Protocol in workflow.md)
+- [x] Task: Write failing tests for Pitch Smoothing (Red Phase) (e55f6e2)
+    - [x] Simulate noisy data (spikes) and assert that the output curve is dampened.
+- [x] Task: Implement EMA & Median Smoothing Filter in `Pitch` notifier (Green Phase) (e55f6e2)
+    - [x] Add filters to raw frequency stream and implement vocal range gating.
+
 
 ## Phase 3: UX & Performance
 - [ ] Task: Optimize `PitchVisualizer` for long-session scrolling
