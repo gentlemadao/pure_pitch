@@ -1,6 +1,7 @@
 // Copyright (c) 2026. Licensed under the MIT OR Apache-2.0 License.
 // SPDX-License-Identifier: MIT OR Apache-2.0
 import 'dart:async';
+import 'dart:math';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
@@ -12,6 +13,7 @@ import 'package:pure_pitch/core/logger/talker.dart';
 import 'package:pure_pitch/core/utils/asset_loader.dart';
 import 'package:pure_pitch/features/pitch/domain/models/pitch_state.dart';
 import 'package:pure_pitch/features/pitch/domain/services/pitch_detector_service.dart';
+import 'package:pure_pitch/features/pitch/domain/utils/pitch_smoother.dart';
 import 'package:pure_pitch/src/rust/api/pitch.dart';
 
 part 'pitch_provider.g.dart';
@@ -20,18 +22,23 @@ part 'pitch_provider.g.dart';
 class Pitch extends _$Pitch {
   AudioRecorder? _recorder;
   StreamSubscription? _sub;
+  Timer? _refinementTimer;
   static const int _sampleRate = 44100;
+  late final PitchSmoother _smoother;
 
   @override
   PitchState build() {
+    _smoother = PitchSmoother();
     ref.onDispose(() {
       _sub?.cancel();
+      _refinementTimer?.cancel();
       _recorder?.dispose();
     });
     return const PitchState();
   }
 
   Future<void> analyzeFile() async {
+    clearError();
     final result = await FilePicker.platform.pickFiles(
       type: FileType.custom,
       allowedExtensions: ['mp3', 'wav', 'aac'],
@@ -66,11 +73,11 @@ class Pitch extends _$Pitch {
       state = state.copyWith(isAnalyzing: false, analysisResults: noteEvents);
     } catch (e) {
       state = state.copyWith(isAnalyzing: false, errorMessage: e.toString());
-      talker.error("File analysis failed", e);
     }
   }
 
   Future<void> toggleCapture() async {
+    clearError();
     if (state.isRecording) {
       await _stopCapture();
     } else {
@@ -81,8 +88,6 @@ class Pitch extends _$Pitch {
   Future<void> _startCapture() async {
     _recorder ??= AudioRecorder();
 
-    // Request microphone permission using the recorder's own method
-    // which works more reliably across all platforms (macOS/iOS/Android/Windows/Linux).
     final hasPermission = await _recorder!.hasPermission();
 
     if (hasPermission) {
@@ -96,6 +101,7 @@ class Pitch extends _$Pitch {
         );
 
         _sub = stream.listen(processAudioChunk);
+        _startRefinementTimer();
 
         state = state.copyWith(
           isRecording: true,
@@ -103,11 +109,9 @@ class Pitch extends _$Pitch {
           errorMessage: null,
         );
       } catch (e) {
-        talker.error("Start capture failed", e);
         state = state.copyWith(errorMessage: "Failed to start capture: $e");
       }
     } else {
-      talker.warning("Microphone permission denied");
       state = state.copyWith(
         errorMessage: "Microphone permission is required to record.",
       );
@@ -119,14 +123,66 @@ class Pitch extends _$Pitch {
       await _recorder?.stop();
       await _sub?.cancel();
       _sub = null;
+      _stopRefinementTimer();
+      // Final refinement
+      _refineHistory();
     } catch (e) {
-      talker.error("Stop capture failed", e);
+      // Silently handle stop errors if any
     }
     state = state.copyWith(isRecording: false, currentPitch: null);
   }
 
+  void _startRefinementTimer() {
+    _refinementTimer?.cancel();
+    _refinementTimer = Timer.periodic(const Duration(milliseconds: 100), (_) {
+      _refineHistory();
+    });
+  }
+
+  void _stopRefinementTimer() {
+    _refinementTimer?.cancel();
+    _refinementTimer = null;
+  }
+
+  /// Tier 2 Refinement: Back-fill history with better smoothed data.
+  void _refineHistory() {
+    if (state.history.isEmpty) return;
+
+    final history = List<TimestampedPitch>.from(state.history);
+    if (history.length < 5) return;
+
+    // Focus refinement only on the last ~1 second of data (approx 20-25 points)
+    // Data older than this is already considered 'mature' and stable.
+    final int startIdx = max(0, history.length - 25);
+    final segment = history.sublist(startIdx);
+
+    final hzValues = segment.map((p) => p.hz).toList();
+    final refinedHz = PitchSmoother.smoothBatch(hzValues, window: 3);
+
+    bool changed = false;
+    for (int i = 0; i < segment.length; i++) {
+      if (segment[i].hz != refinedHz[i]) {
+        history[startIdx + i] = TimestampedPitch(
+          segment[i].time,
+          hz: refinedHz[i],
+          midiNote: PitchSmoother.hzToMidi(refinedHz[i]),
+          clarity: segment[i].clarity,
+        );
+        changed = true;
+      }
+    }
+
+    if (changed) {
+      state = state.copyWith(history: history);
+    }
+  }
+
   void updateVisibleTimeWindow(double newValue) {
     state = state.copyWith(visibleTimeWindow: newValue.clamp(5.0, 10.0));
+  }
+
+  void clearError() {
+    state = state.copyWith(errorMessage: null);
   }
 
   @visibleForTesting
@@ -158,11 +214,14 @@ class Pitch extends _$Pitch {
 
       if (!ref.mounted) return;
 
+      // Apply Smoothing
+      final smoothed = _smoother.smooth(result.hz, result.midiNote);
+
       final now = clock.now();
       final newPoint = TimestampedPitch(
         now,
-        hz: result.hz,
-        midiNote: result.midiNote,
+        hz: smoothed.hz,
+        midiNote: smoothed.midiNote,
         clarity: result.clarity,
       );
 
@@ -173,7 +232,11 @@ class Pitch extends _$Pitch {
 
       LivePitch? newCurrentPitch = state.currentPitch;
       if (result.clarity > 0.4) {
-        newCurrentPitch = result;
+        newCurrentPitch = LivePitch(
+          hz: smoothed.hz,
+          midiNote: smoothed.midiNote,
+          clarity: result.clarity,
+        );
       }
 
       state = state.copyWith(
@@ -181,7 +244,7 @@ class Pitch extends _$Pitch {
         currentPitch: newCurrentPitch,
       );
     } catch (e) {
-      talker.error("Analysis failed", e);
+      // Avoid excessive error logging in high-frequency loop
     }
   }
 }
