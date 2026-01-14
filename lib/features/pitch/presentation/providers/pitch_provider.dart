@@ -1,6 +1,7 @@
 // Copyright (c) 2026. Licensed under the MIT OR Apache-2.0 License.
 // SPDX-License-Identifier: MIT OR Apache-2.0
 import 'dart:async';
+import 'dart:io';
 import 'dart:math';
 
 import 'package:file_picker/file_picker.dart';
@@ -8,9 +9,11 @@ import 'package:flutter/foundation.dart';
 import 'package:record/record.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:clock/clock.dart';
+import 'package:path/path.dart' as p;
 
 import 'package:pure_pitch/core/logger/talker.dart';
 import 'package:pure_pitch/core/utils/asset_loader.dart';
+import 'package:pure_pitch/features/pitch/data/repositories/session_repository.dart';
 import 'package:pure_pitch/features/pitch/domain/models/pitch_state.dart';
 import 'package:pure_pitch/features/pitch/domain/services/pitch_detector_service.dart';
 import 'package:pure_pitch/features/pitch/domain/utils/pitch_smoother.dart';
@@ -57,6 +60,29 @@ class Pitch extends _$Pitch {
     );
 
     try {
+      final file = File(audioPath);
+      final fileName = p.basename(audioPath);
+      final fileSize = await file.length();
+
+      // 1. Check Cache
+      final repo = ref.read(sessionRepositoryProvider);
+      final cached = await repo.findSessionByFile(
+        fileName: fileName,
+        fileSize: fileSize,
+      );
+
+      if (cached != null) {
+        talker.info('Loading analysis results from cache for $fileName');
+        if (ref.mounted) {
+          state = state.copyWith(
+            isAnalyzing: false,
+            analysisResults: cached.events,
+          );
+        }
+        return;
+      }
+
+      // 2. Run Inference
       final modelPath = await AssetLoader.loadModelPath('basic_pitch.onnx');
       final noteEvents = await analyzeAudioFile(
         audioPath: audioPath,
@@ -64,15 +90,29 @@ class Pitch extends _$Pitch {
       );
 
       talker.info('Analysis completed. Found ${noteEvents.length} notes.');
+      double duration = 0;
       if (noteEvents.isNotEmpty) {
         final last = noteEvents.last;
-        final duration = last.startTime + last.duration;
+        duration = last.startTime + last.duration;
         talker.info('Analysis duration: ${duration.toStringAsFixed(2)}s');
       }
 
-      state = state.copyWith(isAnalyzing: false, analysisResults: noteEvents);
+      // 3. Save to Cache
+      await repo.saveSession(
+        filePath: audioPath,
+        fileName: fileName,
+        fileSize: fileSize,
+        durationSeconds: duration,
+        noteEvents: noteEvents,
+      );
+
+      if (ref.mounted) {
+        state = state.copyWith(isAnalyzing: false, analysisResults: noteEvents);
+      }
     } catch (e) {
-      state = state.copyWith(isAnalyzing: false, errorMessage: e.toString());
+      if (ref.mounted) {
+        state = state.copyWith(isAnalyzing: false, errorMessage: e.toString());
+      }
     }
   }
 
@@ -183,6 +223,15 @@ class Pitch extends _$Pitch {
 
   void clearError() {
     state = state.copyWith(errorMessage: null);
+  }
+
+  void loadSession(SessionWithEvents sessionWithEvents) {
+    state = state.copyWith(
+      analysisResults: sessionWithEvents.events,
+      isRecording: false,
+      history: [],
+      currentPitch: null,
+    );
   }
 
   @visibleForTesting

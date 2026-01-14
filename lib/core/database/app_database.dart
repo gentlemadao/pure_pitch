@@ -30,7 +30,9 @@ class NoteEvents extends Table {
 
 @DriftDatabase(tables: [Sessions, NoteEvents])
 class AppDatabase extends _$AppDatabase {
-  AppDatabase([QueryExecutor? e]) : super(e ?? _openConnection());
+  AppDatabase([QueryExecutor? e]) : super(e ?? _openConnection()) {
+    print('DB_DEBUG: AppDatabase initialized');
+  }
 
   @override
   int get schemaVersion => 1;
@@ -47,6 +49,6 @@ LazyDatabase _openConnection() {
   return LazyDatabase(() async {
     final dbFolder = await getApplicationDocumentsDirectory();
     final file = File(p.join(dbFolder.path, 'pure_pitch.sqlite'));
-    return NativeDatabase.createInBackground(file);
+    return NativeDatabase(file);
   });
 }

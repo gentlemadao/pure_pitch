@@ -34,15 +34,18 @@ class SessionRepository {
     required String fileName,
     required int fileSize,
   }) async {
+    print('REPO_DEBUG: looking for $fileName ($fileSize)');
     final session = await (_db.select(_db.sessions)
           ..where((t) => t.fileName.equals(fileName) & t.fileSize.equals(fileSize)))
         .getSingleOrNull();
 
+    print('REPO_DEBUG: session found? ${session != null}');
     if (session == null) return null;
 
     final dbEvents = await (_db.select(_db.noteEvents)
           ..where((t) => t.sessionId.equals(session.id)))
         .get();
+    print('REPO_DEBUG: events found: ${dbEvents.length}');
 
     final events = dbEvents.map((e) => rust.NoteEvent(
       startTime: e.startTime,
@@ -55,6 +58,16 @@ class SessionRepository {
       session: session,
       events: events,
     );
+  }
+
+  Future<List<Session>> getAllSessions() async {
+    return await (_db.select(_db.sessions)
+          ..orderBy([(t) => OrderingTerm(expression: t.createdAt, mode: OrderingMode.desc)]))
+        .get();
+  }
+
+  Future<void> deleteSession(int sessionId) async {
+    await (_db.delete(_db.sessions)..where((t) => t.id.equals(sessionId))).go();
   }
 
   Future<void> saveSession({

@@ -9,6 +9,7 @@ import 'package:pure_pitch/core/extensions/context_extension.dart';
 import 'package:pure_pitch/core/logger/talker.dart';
 import 'package:pure_pitch/features/pitch/presentation/providers/pitch_provider.dart';
 import 'package:pure_pitch/features/pitch/presentation/widgets/pitch_visualizer.dart';
+import 'package:pure_pitch/features/pitch/presentation/pages/sessions_list_page.dart';
 
 class PitchDetectorPage extends ConsumerStatefulWidget {
   const PitchDetectorPage({super.key});
@@ -77,6 +78,13 @@ class _PitchDetectorPageState extends ConsumerState<PitchDetectorPage>
       appBar: AppBar(
         title: Text(context.l10n.appTitle),
         actions: [
+          IconButton(
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (context) => const SessionsListPage()),
+            ),
+            icon: const Icon(Icons.history),
+            tooltip: 'History',
+          ),
           IconButton(
             onPressed: () => ref.read(pitchProvider.notifier).analyzeFile(),
             icon: const Icon(Icons.audio_file),
