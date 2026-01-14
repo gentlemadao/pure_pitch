@@ -2,8 +2,10 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:clock/clock.dart';
 import 'package:pure_pitch/src/rust/api/pitch.dart';
 import 'package:pure_pitch/features/pitch/domain/models/pitch_state.dart';
+import 'package:pure_pitch/features/pitch/domain/utils/pitch_coordinate_mapper.dart';
 
 class PitchVisualizer extends StatefulWidget {
   final List<TimestampedPitch> history;
@@ -37,49 +39,166 @@ class _PitchVisualizerState extends State<PitchVisualizer> {
         final double pixelsPerSecond =
             constraints.maxWidth / widget.visibleTimeWindow;
 
-        // Calculate total width
-        double totalWidth = constraints.maxWidth;
-        if (widget.noteEvents.isNotEmpty) {
-          final lastNote = widget.noteEvents.last;
-          totalWidth =
-              (lastNote.startTime + lastNote.duration) * pixelsPerSecond + 100;
+        // Calculate dynamic range based on both datasets
+        // Minimum range restriction: B2 (47) to A4 (69)
+        int minD = 47;
+        int maxD = 69;
+
+        for (final p in widget.history) {
+          if (p.clarity > 0.4 && p.midiNote > 0) {
+            if (p.midiNote < minD) minD = p.midiNote;
+            if (p.midiNote > maxD) maxD = p.midiNote;
+          }
+        }
+        for (final e in widget.noteEvents) {
+          if (e.midiNote < minD) minD = e.midiNote;
+          if (e.midiNote > maxD) maxD = e.midiNote;
         }
 
-        // Auto-scroll to the end if recording
-        if (widget.isRecording && _scrollController.hasClients) {
+        // Add padding of 5 semitones
+        int effectiveMinNote = max(0, minD - 5);
+        int effectiveMaxNote = min(127, maxD + 5);
+
+        // Ensure we always show at least the B2-A4 range (plus padding)
+        effectiveMinNote = min(effectiveMinNote, 42); // 47 - 5
+        effectiveMaxNote = max(effectiveMaxNote, 74); // 69 + 5
+
+        // Calculate total width
+        double totalWidth = constraints.maxWidth;
+        final DateTime now = clock.now();
+        
+        double recordingX = 0;
+        bool hasRecording = widget.history.isNotEmpty;
+
+        if (hasRecording) {
+          final firstPointTime = widget.history.first.time;
+          final sessionDuration =
+              now.difference(firstPointTime).inMilliseconds / 1000.0;
+          recordingX = sessionDuration * pixelsPerSecond;
+          totalWidth = max(totalWidth, recordingX + 100);
+        }
+
+        if (widget.noteEvents.isNotEmpty) {
+          final lastNote = widget.noteEvents.last;
+          final endTime = lastNote.startTime + lastNote.duration;
+          final analysisWidth = endTime * pixelsPerSecond;
+          totalWidth = max(totalWidth, analysisWidth + 100);
+        }
+
+        // Auto-scroll logic: Follow the recording playhead
+        if (widget.isRecording && hasRecording) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
-            _scrollController.jumpTo(
-              _scrollController.position.maxScrollExtent,
-            );
+            if (_scrollController.hasClients && widget.isRecording) {
+              // Keep the playhead at the right edge of the screen
+              final targetOffset = max(0.0, recordingX - (constraints.maxWidth - 50));
+              _scrollController.jumpTo(targetOffset);
+            }
           });
         }
 
         return Container(
           color: const Color(0xFF121212), // Deep background
-          child: SingleChildScrollView(
-            controller: _scrollController,
-            scrollDirection: Axis.horizontal,
-            child: CustomPaint(
-              size: Size(
-                max(totalWidth, constraints.maxWidth),
-                constraints.maxHeight,
+          child: Stack(
+            children: [
+              // 1. Scrolling Content (Grid and Pitch)
+              Positioned.fill(
+                child: SingleChildScrollView(
+                  controller: _scrollController,
+                  scrollDirection: Axis.horizontal,
+                  child: CustomPaint(
+                    size: Size(
+                      max(totalWidth, constraints.maxWidth),
+                      constraints.maxHeight,
+                    ),
+                    painter: _PitchPainter(
+                      history: widget.history,
+                      noteEvents: widget.noteEvents,
+                      isRecording: widget.isRecording,
+                      pixelsPerSecond: pixelsPerSecond,
+                      visibleTimeWindow: widget.visibleTimeWindow,
+                      minNote: effectiveMinNote,
+                      maxNote: effectiveMaxNote,
+                      viewportWidth: constraints.maxWidth,
+                      now: now,
+                      drawLabels: false,
+                    ),
+                  ),
+                ),
               ),
-              painter: _PitchPainter(
-                history: widget.history,
-                noteEvents: widget.noteEvents,
-                isRecording: widget.isRecording,
-                pixelsPerSecond: pixelsPerSecond,
-                visibleTimeWindow: widget.visibleTimeWindow,
-                minNote: widget.minNote,
-                maxNote: widget.maxNote,
-                viewportWidth: constraints.maxWidth,
+
+              // 2. Fixed Labels Overlay
+              Positioned(
+                left: 0,
+                top: 0,
+                bottom: 0,
+                width: 40,
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.black.withValues(alpha: 0.6),
+                    border: const Border(
+                      right: BorderSide(color: Colors.white10),
+                    ),
+                  ),
+                  child: CustomPaint(
+                    painter: _PitchLabelsPainter(
+                      minNote: effectiveMinNote,
+                      maxNote: effectiveMaxNote,
+                    ),
+                  ),
+                ),
               ),
-            ),
+            ],
           ),
         );
       },
     );
   }
+}
+
+class _PitchLabelsPainter extends CustomPainter {
+  final int minNote;
+  final int maxNote;
+
+  _PitchLabelsPainter({required this.minNote, required this.maxNote});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final noteRange = maxNote - minNote;
+    final heightPerNote = size.height / noteRange;
+
+    for (int i = minNote; i <= maxNote; i++) {
+      final y = size.height - ((i - minNote) * heightPerNote);
+      final isC = (i % 12) == 0;
+      final isAccidental = [1, 3, 6, 8, 10].contains(i % 12);
+
+      if (isC || !isAccidental) {
+        final textPainter = TextPainter(
+          text: TextSpan(
+            text: _midiToNoteName(i),
+            style: TextStyle(
+              color: isC ? Colors.white70 : Colors.white38,
+              fontSize: isC ? 10 : 8,
+              fontWeight: isC ? FontWeight.bold : FontWeight.normal,
+            ),
+          ),
+          textDirection: TextDirection.ltr,
+        )..layout();
+        textPainter.paint(canvas, Offset(5, y - textPainter.height / 2));
+      }
+    }
+  }
+
+  String _midiToNoteName(int midi) {
+    final names = [
+      'C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'
+    ];
+    final octave = (midi / 12).floor() - 1;
+    return '${names[midi % 12]}$octave';
+  }
+
+  @override
+  bool shouldRepaint(covariant _PitchLabelsPainter oldDelegate) =>
+      oldDelegate.minNote != minNote || oldDelegate.maxNote != maxNote;
 }
 
 class _PitchPainter extends CustomPainter {
@@ -91,6 +210,8 @@ class _PitchPainter extends CustomPainter {
   final int minNote;
   final int maxNote;
   final double viewportWidth;
+  final DateTime now;
+  final bool drawLabels;
 
   _PitchPainter({
     required this.history,
@@ -101,6 +222,8 @@ class _PitchPainter extends CustomPainter {
     required this.minNote,
     required this.maxNote,
     required this.viewportWidth,
+    required this.now,
+    this.drawLabels = true,
   });
 
   @override
@@ -111,7 +234,7 @@ class _PitchPainter extends CustomPainter {
       _drawNoteEvents(canvas, size);
     }
 
-    if (isRecording && history.isNotEmpty) {
+    if (history.isNotEmpty) {
       _drawLivePitch(canvas, size);
     }
   }
@@ -138,11 +261,11 @@ class _PitchPainter extends CustomPainter {
         isC ? octavePaint : linePaint,
       );
 
-      if (isC) {
+      if (drawLabels && isC) {
         final textPainter = TextPainter(
           text: TextSpan(
             text: 'C${(i / 12).floor() - 1}',
-            style: TextStyle(color: Colors.white38, fontSize: 10),
+            style: const TextStyle(color: Colors.white38, fontSize: 10),
           ),
           textDirection: TextDirection.ltr,
         )..layout();
@@ -202,32 +325,60 @@ class _PitchPainter extends CustomPainter {
       ..strokeCap = StrokeCap.round
       ..style = PaintingStyle.stroke;
 
+    // Add glow effect to the main line
+    final shadowPaint = Paint()
+      ..color = Colors.cyanAccent.withValues(alpha: 0.3)
+      ..strokeWidth = 6.0
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3)
+      ..style = PaintingStyle.stroke;
+
+    final bridgePaint = Paint()
+      ..color = Colors.white24
+      ..strokeWidth = 1.0
+      ..style = PaintingStyle.stroke;
+
     final path = Path();
+    final bridgePath = Path();
     bool isFirst = true;
 
-    final noteRange = maxNote - minNote;
-    final heightPerNote = size.height / noteRange;
+    // Calculate session start time for X offset
+    final sessionStartTime = history.first.time;
 
-    // Live pitch drawing logic: X coordinates based on timestamps
-    // Most recent point is on the far right
-    final now = history.last.time;
-    final windowDurationMs = (visibleTimeWindow * 1000).toInt();
+    for (int i = 0; i < history.length; i++) {
+      final point = history[i];
+      final diffMsFromStart =
+          point.time.difference(sessionStartTime).inMilliseconds;
+      final x = diffMsFromStart / 1000.0 * pixelsPerSecond;
 
-    for (final point in history) {
-      final diffMs = now.difference(point.time).inMilliseconds;
-      if (diffMs > windowDurationMs) continue;
-
-      // X coordinate: offset from right to left
-      final x = size.width - (diffMs / 1000.0 * pixelsPerSecond);
-
-      double fractionalMidi = point.midiNote.toDouble();
-      if (point.hz > 0) {
-        fractionalMidi = 69 + 12 * (log(point.hz / 440.0) / log(2));
-      }
-      final y = size.height - ((fractionalMidi - minNote) * heightPerNote);
+      final y = PitchCoordinateMapper.calculateY(
+        hz: point.hz,
+        minNote: minNote,
+        maxNote: maxNote,
+        height: size.height,
+      );
 
       if (point.clarity < 0.4) {
+        // If it's a short gap, we could bridge it. 
+        // But for simplicity in path drawing, we break the main path here.
         isFirst = true;
+        
+        // Short gap bridging: peek next point
+        if (i > 0 && i < history.length - 1) {
+            final prev = history[i-1];
+            final next = history[i+1];
+            if (prev.clarity >= 0.4 && next.clarity >= 0.4) {
+                final gapMs = next.time.difference(prev.time).inMilliseconds;
+                if (gapMs < 300) {
+                   final prevX = prev.time.difference(sessionStartTime).inMilliseconds / 1000.0 * pixelsPerSecond;
+                   final prevY = PitchCoordinateMapper.calculateY(hz: prev.hz, minNote: minNote, maxNote: maxNote, height: size.height);
+                   final nextX = next.time.difference(sessionStartTime).inMilliseconds / 1000.0 * pixelsPerSecond;
+                   final nextY = PitchCoordinateMapper.calculateY(hz: next.hz, minNote: minNote, maxNote: maxNote, height: size.height);
+                   
+                   bridgePath.moveTo(prevX, prevY);
+                   bridgePath.lineTo(nextX, nextY);
+                }
+            }
+        }
         continue;
       }
 
@@ -238,22 +389,59 @@ class _PitchPainter extends CustomPainter {
         path.lineTo(x, y);
       }
     }
+
+    // Draw paths
+    canvas.drawPath(bridgePath, bridgePaint);
+    canvas.drawPath(path, shadowPaint);
     canvas.drawPath(path, paint);
 
-    // Draw current cursor point
-    final last = history.last;
-    if (last.clarity >= 0.4) {
-      final y = size.height - ((last.midiNote - minNote) * heightPerNote);
-      canvas.drawCircle(
-        Offset(size.width, y),
-        5,
-        Paint()..color = Colors.white,
+    // 2. Draw Vertical Playhead (Current Time Indicator)
+    if (isRecording) {
+      final nowDiffMs = now.difference(sessionStartTime).inMilliseconds;
+      final playheadX = nowDiffMs / 1000.0 * pixelsPerSecond;
+
+      final playheadPaint = Paint()
+        ..color = Colors.cyanAccent.withValues(alpha: 0.4)
+        ..strokeWidth = 1.0;
+      
+      // Draw playhead vertical line
+      canvas.drawLine(
+        Offset(playheadX, 0),
+        Offset(playheadX, size.height),
+        playheadPaint,
       );
-      canvas.drawCircle(
-        Offset(size.width, y),
-        8,
-        Paint()..color = Colors.cyanAccent.withValues(alpha: 0.3),
-      );
+
+      // Draw cursor point (the pulsing head)
+      final last = history.last;
+      final headX = playheadX; // Use playhead X for the very tip
+      
+      if (last.clarity >= 0.4) {
+        final headY = PitchCoordinateMapper.calculateY(
+          hz: last.hz,
+          minNote: minNote,
+          maxNote: maxNote,
+          height: size.height,
+        );
+
+        canvas.drawCircle(
+          Offset(headX, headY),
+          5,
+          Paint()..color = Colors.white,
+        );
+        canvas.drawCircle(
+          Offset(headX, headY),
+          10,
+          Paint()..color = Colors.cyanAccent.withValues(alpha: 0.3),
+        );
+      } else {
+        // If silent, show a small pulsing dot at the bottom to indicate listening
+        final pulseSize = 3.0 + (sin(now.millisecondsSinceEpoch / 200) * 2);
+        canvas.drawCircle(
+          Offset(headX, size.height - 10),
+          pulseSize,
+          Paint()..color = Colors.cyanAccent.withValues(alpha: 0.2),
+        );
+      }
     }
   }
 

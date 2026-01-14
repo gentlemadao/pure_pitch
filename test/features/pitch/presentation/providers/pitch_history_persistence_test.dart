@@ -5,7 +5,6 @@ import 'package:pure_pitch/features/pitch/presentation/providers/pitch_provider.
 import 'package:pure_pitch/features/pitch/domain/services/pitch_detector_service.dart';
 import 'package:pure_pitch/src/rust/api/pitch.dart';
 import 'package:riverpod/riverpod.dart';
-import 'package:fake_async/fake_async.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:clock/clock.dart';
 import 'dart:typed_data';

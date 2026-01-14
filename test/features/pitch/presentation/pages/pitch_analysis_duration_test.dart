@@ -80,9 +80,9 @@ void main() {
     expect(visualizerFinder, findsOneWidget);
 
     // 3. Verify Canvas Width
-    // We need to access the CustomPaint inside.
+    // We need to access the scrolling CustomPaint inside the SingleChildScrollView.
     final customPaintFinder = find.descendant(
-      of: visualizerFinder,
+      of: find.byType(SingleChildScrollView),
       matching: find.byType(CustomPaint),
     );
     expect(customPaintFinder, findsOneWidget);
@@ -133,7 +133,7 @@ void main() {
     await tester.pumpAndSettle();
 
     final customPaintFinder = find.descendant(
-      of: find.byType(PitchVisualizer),
+      of: find.byType(SingleChildScrollView),
       matching: find.byType(CustomPaint),
     );
 

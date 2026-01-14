@@ -15,7 +15,7 @@
     - [x] Add filters to raw frequency stream and implement vocal range gating.
 
 
-## Phase 3: UX & Performance
-- [ ] Task: Optimize `PitchVisualizer` for long-session scrolling
-    - [ ] Ensure `SingleChildScrollView` handles growing history and enables post-stop review.
-- [ ] Task: Conductor - User Manual Verification 'Phase 3: UX & Performance' (Protocol in workflow.md)
+## Phase 3: UX & Performance [checkpoint: d39816f]
+- [x] Task: Optimize `PitchVisualizer` for long-session scrolling (d39816f)
+    - [x] Ensure `SingleChildScrollView` handles growing history and enables post-stop review.
+- [x] Task: Conductor - User Manual Verification 'Phase 3: UX & Performance' (Protocol in workflow.md) (d39816f)
