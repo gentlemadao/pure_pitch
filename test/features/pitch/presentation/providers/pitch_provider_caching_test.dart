@@ -4,9 +4,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:pure_pitch/features/pitch/data/repositories/session_repository.dart';
 import 'package:pure_pitch/features/pitch/presentation/providers/pitch_provider.dart';
-import 'package:pure_pitch/src/rust/api/pitch.dart';
+import 'package:pure_pitch/src/rust/api/pitch.dart' as rust;
 import 'package:riverpod/riverpod.dart';
-import 'package:pure_pitch/core/database/app_database.dart';
+import 'package:pure_pitch/core/database/app_database.dart' as db;
 import 'dart:io';
 
 class MockSessionRepository extends Mock implements SessionRepository {}
@@ -42,7 +42,7 @@ void main() {
         )).thenAnswer((_) async {
           print('MOCK_CALLED: findSessionByFile');
           return SessionWithEvents(
-            session: Session(
+            session: db.Session(
               id: 1,
               filePath: filePath,
               fileName: fileName,
@@ -51,7 +51,7 @@ void main() {
               createdAt: DateTime.now(),
             ),
             events: [
-              const NoteEvent(startTime: 0.0, duration: 1.0, midiNote: 60, confidence: 1.0),
+              const rust.NoteEvent(startTime: 0.0, duration: 1.0, midiNote: 60, confidence: 1.0),
             ],
           );
         });

@@ -79,39 +79,64 @@ class _PitchDetectorPageState extends ConsumerState<PitchDetectorPage>
         title: Text(context.l10n.appTitle),
         actions: [
           IconButton(
-            onPressed: () => ref
-                .read(pitchProvider.notifier)
-                .toggleMonitoring(!pitchState.isMonitoringEnabled),
-            icon: Icon(
-              pitchState.isMonitoringEnabled ? Icons.headset : Icons.headset_off,
-              color: pitchState.isMonitoringEnabled
-                  ? Colors.cyanAccent
-                  : Colors.white24,
-            ),
-            tooltip: 'Karaoke Mode',
-          ),
-          IconButton(
-            onPressed: () => Navigator.of(context).push(
-              MaterialPageRoute(builder: (context) => const SessionsListPage()),
-            ),
-            icon: const Icon(Icons.history),
-            tooltip: 'History',
-          ),
-          IconButton(
             onPressed: () => ref.read(pitchProvider.notifier).analyzeFile(),
-            icon: const Icon(Icons.audio_file),
+            icon: const Icon(Icons.add_circle_outline),
             tooltip: context.l10n.analyzeAudioFile,
           ),
-          IconButton(
-            onPressed: () => Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (context) => TalkerScreen(talker: talker),
+        ],
+      ),
+      drawer: Drawer(
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            DrawerHeader(
+              decoration: const BoxDecoration(
+                color: Colors.cyanAccent,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  Text(
+                    context.l10n.appTitle,
+                    style: const TextStyle(
+                      color: Colors.black,
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'Tools & History',
+                    style: TextStyle(color: Colors.black87),
+                  ),
+                ],
               ),
             ),
-            icon: const Icon(Icons.bug_report),
-            tooltip: context.l10n.viewLogs,
-          ),
-        ],
+            ListTile(
+              leading: const Icon(Icons.history),
+              title: const Text('Saved Sessions'),
+              onTap: () {
+                Navigator.pop(context); // Close drawer
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (context) => const SessionsListPage()),
+                );
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.bug_report),
+              title: const Text('View Logs'),
+              onTap: () {
+                Navigator.pop(context); // Close drawer
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => TalkerScreen(talker: talker),
+                  ),
+                );
+              },
+            ),
+          ],
+        ),
       ),
       body: LayoutBuilder(
         builder: (context, constraints) {
@@ -153,8 +178,35 @@ class _PitchDetectorPageState extends ConsumerState<PitchDetectorPage>
                 ),
               ),
 
-              // ... rest of the build method stays similar, but I need to make sure I don't break the Stack structure.
-              // I will apply the change more precisely below.
+              // Audio Control Bar
+              Positioned(
+                top: 10,
+                left: 60, // Avoid overlapping piano labels
+                right: 20,
+                child: Row(
+                  children: [
+                    // Volume Cycle Button
+                    _ControlChip(
+                      onPressed: () => ref.read(pitchProvider.notifier).cycleMonitoringVolume(),
+                      icon: pitchState.monitoringVolume == 0
+                          ? Icons.volume_off
+                          : (pitchState.monitoringVolume < 0.5 ? Icons.volume_down : Icons.volume_up),
+                      label: '${(pitchState.monitoringVolume * 100).toInt()}%',
+                      isActive: pitchState.monitoringVolume > 0,
+                    ),
+                    const SizedBox(width: 10),
+                    // Accompaniment Toggle
+                    if (pitchState.accompanimentPath != null)
+                      _ControlChip(
+                        onPressed: () => ref.read(pitchProvider.notifier).toggleAccompaniment(!pitchState.isAccompanimentEnabled),
+                        icon: Icons.library_music,
+                        label: 'Acc.',
+                        isActive: pitchState.isAccompanimentEnabled,
+                      ),
+                  ],
+                ),
+              ),
+
               if (pitchState.isAnalyzing)
                 Center(
                   child: Column(
@@ -300,6 +352,58 @@ class _PitchDetectorPageState extends ConsumerState<PitchDetectorPage>
             ],
           );
         },
+      ),
+    );
+  }
+}
+
+class _ControlChip extends StatelessWidget {
+  final VoidCallback onPressed;
+  final IconData icon;
+  final String label;
+  final bool isActive;
+
+  const _ControlChip({
+    required this.onPressed,
+    required this.icon,
+    required this.label,
+    required this.isActive,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onPressed,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: isActive ? Colors.cyanAccent.withValues(alpha: 0.2) : Colors.white10,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isActive ? Colors.cyanAccent : Colors.white24,
+            width: 1,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              icon,
+              size: 16,
+              color: isActive ? Colors.cyanAccent : Colors.white70,
+            ),
+            const SizedBox(width: 6),
+            Text(
+              label,
+              style: TextStyle(
+                color: isActive ? Colors.cyanAccent : Colors.white70,
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

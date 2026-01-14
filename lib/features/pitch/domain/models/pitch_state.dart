@@ -26,6 +26,8 @@ abstract class PitchState with _$PitchState {
     String? errorMessage,
     @Default(5.0) double visibleTimeWindow,
     String? currentFilePath,
-    @Default(false) bool isMonitoringEnabled,
+    @Default(0.0) double monitoringVolume,
+    @Default(false) bool isAccompanimentEnabled,
+    String? accompanimentPath,
   }) = _PitchState;
 }

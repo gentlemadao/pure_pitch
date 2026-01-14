@@ -8,19 +8,22 @@
 - [x] Task: Update `SessionRepository` to support `accompanimentPath` in CRUD operations (Green Phase)
 - [x] Task: Conductor - User Manual Verification 'Phase 1: Database & Data Layer' (Protocol in workflow.md) (78ea207)
 
-## Phase 2: UI - Timeline & List Enhancements
+## Phase 2: UI - Timeline & List Enhancements [checkpoint: e43e5e4]
 - [x] Task: Write failing tests for Timeline Rendering (Red Phase)
 - [x] Task: Implement `PitchTimeline` component in `PitchVisualizer` (Green Phase)
 - [x] Task: Implement Accompaniment Status Indicator in `SessionsListPage` (Green Phase)
     - [x] Add a visual badge or icon to list items that have a saved accompaniment path.
-- [ ] Task: Conductor - User Manual Verification 'Phase 2: UI - Timeline & List Enhancements' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Phase 2: UI - Timeline & List Enhancements' (Protocol in workflow.md) (e43e5e4)
 
 ## Phase 3: Logic - Multi-level Volume & Accompaniment Playback
-- [ ] Task: Write failing tests for Volume Cycling & Accompaniment Sync (Red Phase)
-- [ ] Task: Implement Volume Cycle logic in `Pitch` notifier (Green Phase)
-- [ ] Task: Implement Accompaniment Selection & Sync in `Pitch` notifier (Green Phase)
-    - [ ] Handle `just_audio` player instances for the accompaniment track.
-- [ ] Task: Refactor `PitchDetectorPage` Control Layout (Green Phase)
-    - [ ] Optimize action button placement (e.g., consolidate into a menu or toolbar) to reduce clutter.
-    - [ ] Integrate new Volume and Accompaniment controls into this refined layout.
-- [ ] Task: Conductor - User Manual Verification 'Phase 3: Logic - Multi-level Volume & Accompaniment Playback' (Protocol in workflow.md)
+- [x] Task: Write failing tests for Volume Cycling & Accompaniment Sync (Red Phase)
+- [x] Task: Implement Volume Cycle logic in `Pitch` notifier (Green Phase)
+- [x] Task: Implement Accompaniment Selection & Sync in `Pitch` notifier (Green Phase)
+- [x] Task: Refactor `PitchDetectorPage` Control Layout (Green Phase)
+- [x] Task: Conductor - User Manual Verification 'Phase 3: Logic - Multi-level Volume & Accompaniment Playback' (Protocol in workflow.md)
+
+## Phase 3.5: UI Refinement - Drawer Navigation
+- [x] Task: Implement Navigation Drawer in `PitchDetectorPage` (Green Phase)
+    - [x] Move History and Logs navigation to the drawer.
+    - [x] Replace "..." menu with a Drawer toggle.
+- [x] Task: Conductor - User Manual Verification 'Phase 3.5: UI Refinement - Drawer Navigation' (Protocol in workflow.md)

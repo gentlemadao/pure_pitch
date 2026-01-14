@@ -47,14 +47,12 @@ class _TimelinePainter extends CustomPainter {
     const double tickHeight = 5.0;
     const double majorTickHeight = 10.0;
 
-    // We only need to draw what's visible, but for a simple ruler, 
-    // we can draw the whole thing if it's not too long, or optimize.
-    // Let's iterate in 1-second steps.
+    // We only need to draw what's visible. 
+    // pixelsPerSecond is correct. size.width is totalWidth.
     
-    final int startSecond = (scrollOffset / pixelsPerSecond).floor();
-    final int endSecond = ((scrollOffset + size.width) / pixelsPerSecond).ceil();
+    final double durationSeconds = size.width / pixelsPerSecond;
 
-    for (int i = 0; i <= endSecond; i++) {
+    for (int i = 0; i <= durationSeconds.ceil(); i++) {
       final x = i * pixelsPerSecond;
       
       // Draw major tick every second
@@ -74,20 +72,22 @@ class _TimelinePainter extends CustomPainter {
          );
       }
 
-      // Draw label
-      final minutes = i ~/ 60;
-      final seconds = i % 60;
-      final timeStr = '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
-      
-      final textPainter = TextPainter(
-        text: TextSpan(
-          text: timeStr,
-          style: const TextStyle(color: Colors.white38, fontSize: 10),
-        ),
-        textDirection: TextDirection.ltr,
-      )..layout();
-      
-      textPainter.paint(canvas, Offset(x - (textPainter.width / 2), majorTickHeight + 2));
+      // Draw label every 5 seconds
+      if (i % 5 == 0) {
+        final minutes = i ~/ 60;
+        final seconds = i % 60;
+        final timeStr = '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
+        
+        final textPainter = TextPainter(
+          text: TextSpan(
+            text: timeStr,
+            style: const TextStyle(color: Colors.white38, fontSize: 10),
+          ),
+          textDirection: TextDirection.ltr,
+        )..layout();
+        
+        textPainter.paint(canvas, Offset(x - (textPainter.width / 2), majorTickHeight + 2));
+      }
     }
     
     // Draw top border

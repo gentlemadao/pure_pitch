@@ -83,7 +83,7 @@ void main() {
     // We need to access the scrolling CustomPaint inside the SingleChildScrollView.
     final customPaintFinder = find.descendant(
       of: find.byType(SingleChildScrollView),
-      matching: find.byType(CustomPaint),
+      matching: find.byWidgetPredicate((w) => w is CustomPaint && w.size.height > 100),
     );
     expect(customPaintFinder, findsOneWidget);
 
@@ -134,7 +134,7 @@ void main() {
 
     final customPaintFinder = find.descendant(
       of: find.byType(SingleChildScrollView),
-      matching: find.byType(CustomPaint),
+      matching: find.byWidgetPredicate((w) => w is CustomPaint && w.size.height > 100),
     );
 
     // Expected logic:

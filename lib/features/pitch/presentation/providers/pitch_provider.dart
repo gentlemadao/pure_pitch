@@ -26,6 +26,7 @@ part 'pitch_provider.g.dart';
 class Pitch extends _$Pitch {
   AudioRecorder? _recorder;
   AudioPlayer? _audioPlayer;
+  AudioPlayer? _accompanimentPlayer;
   StreamSubscription? _sub;
   Timer? _refinementTimer;
   static const int _sampleRate = 44100;
@@ -39,6 +40,7 @@ class Pitch extends _$Pitch {
       _refinementTimer?.cancel();
       _recorder?.dispose();
       _audioPlayer?.dispose();
+      _accompanimentPlayer?.dispose();
     });
     return const PitchState();
   }
@@ -46,6 +48,11 @@ class Pitch extends _$Pitch {
   AudioPlayer get _player {
     _audioPlayer ??= AudioPlayer();
     return _audioPlayer!;
+  }
+
+  AudioPlayer get _accPlayer {
+    _accompanimentPlayer ??= AudioPlayer();
+    return _accompanimentPlayer!;
   }
 
   Future<void> analyzeFile() async {
@@ -156,8 +163,11 @@ class Pitch extends _$Pitch {
         _sub = stream.listen(processAudioChunk);
         _startRefinementTimer();
 
-        if (state.isMonitoringEnabled) {
+        if (state.monitoringVolume > 0) {
           _playOriginalAudio();
+        }
+        if (state.isAccompanimentEnabled) {
+          _playAccompaniment();
         }
 
         state = state.copyWith(
@@ -182,6 +192,7 @@ class Pitch extends _$Pitch {
       _sub = null;
       _stopRefinementTimer();
       _stopOriginalAudio();
+      _stopAccompaniment();
       // Final refinement
       _refineHistory();
     } catch (e) {
@@ -243,14 +254,48 @@ class Pitch extends _$Pitch {
     state = state.copyWith(errorMessage: null);
   }
 
-  void toggleMonitoring(bool enabled) {
-    state = state.copyWith(isMonitoringEnabled: enabled);
+  void cycleMonitoringVolume() {
+    final current = state.monitoringVolume;
+    double next = 0.0;
+    if (current == 0.0) {
+      next = 0.4;
+    } else if (current == 0.4) {
+      next = 0.7;
+    } else {
+      next = 0.0;
+    }
+    state = state.copyWith(monitoringVolume: next);
+    _audioPlayer?.setVolume(next);
+  }
+
+  void toggleAccompaniment(bool enabled) {
+    state = state.copyWith(isAccompanimentEnabled: enabled);
+  }
+
+  Future<void> updateAccompanimentPath(String path) async {
+    final session = await ref.read(sessionRepositoryProvider).findSessionByFile(
+      fileName: p.basename(state.currentFilePath ?? ''),
+      fileSize: state.currentFilePath != null ? await File(state.currentFilePath!).length() : 0,
+    );
+
+    if (session != null) {
+      await ref.read(sessionRepositoryProvider).saveSession(
+        filePath: session.session.filePath,
+        fileName: session.session.fileName,
+        fileSize: session.session.fileSize,
+        durationSeconds: session.session.durationSeconds,
+        noteEvents: session.events,
+        accompanimentPath: path,
+      );
+      state = state.copyWith(accompanimentPath: path);
+    }
   }
 
   void loadSession(SessionWithEvents sessionWithEvents) {
     state = state.copyWith(
       analysisResults: sessionWithEvents.events,
       currentFilePath: sessionWithEvents.session.filePath,
+      accompanimentPath: sessionWithEvents.session.accompanimentPath,
       isRecording: false,
       history: [],
       currentPitch: null,
@@ -261,6 +306,7 @@ class Pitch extends _$Pitch {
     if (state.currentFilePath != null) {
       try {
         await _player.setFilePath(state.currentFilePath!);
+        await _player.setVolume(state.monitoringVolume);
         await _player.play();
       } catch (e) {
         talker.error('Failed to play original audio', e);
@@ -268,8 +314,23 @@ class Pitch extends _$Pitch {
     }
   }
 
+  Future<void> _playAccompaniment() async {
+    if (state.accompanimentPath != null) {
+      try {
+        await _accPlayer.setFilePath(state.accompanimentPath!);
+        await _accPlayer.play();
+      } catch (e) {
+        talker.error('Failed to play accompaniment', e);
+      }
+    }
+  }
+
   void _stopOriginalAudio() {
     _audioPlayer?.stop();
+  }
+
+  void _stopAccompaniment() {
+    _accompanimentPlayer?.stop();
   }
 
   @visibleForTesting

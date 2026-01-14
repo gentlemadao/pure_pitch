@@ -280,7 +280,7 @@ as double,
 /// @nodoc
 mixin _$PitchState {
 
- bool get isRecording; bool get isAnalyzing; LivePitch? get currentPitch; List<TimestampedPitch> get history; List<NoteEvent> get analysisResults; String? get errorMessage; double get visibleTimeWindow; String? get currentFilePath; bool get isMonitoringEnabled;
+ bool get isRecording; bool get isAnalyzing; LivePitch? get currentPitch; List<TimestampedPitch> get history; List<NoteEvent> get analysisResults; String? get errorMessage; double get visibleTimeWindow; String? get currentFilePath; double get monitoringVolume; bool get isAccompanimentEnabled; String? get accompanimentPath;
 /// Create a copy of PitchState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -291,16 +291,16 @@ $PitchStateCopyWith<PitchState> get copyWith => _$PitchStateCopyWithImpl<PitchSt
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is PitchState&&(identical(other.isRecording, isRecording) || other.isRecording == isRecording)&&(identical(other.isAnalyzing, isAnalyzing) || other.isAnalyzing == isAnalyzing)&&(identical(other.currentPitch, currentPitch) || other.currentPitch == currentPitch)&&const DeepCollectionEquality().equals(other.history, history)&&const DeepCollectionEquality().equals(other.analysisResults, analysisResults)&&(identical(other.errorMessage, errorMessage) || other.errorMessage == errorMessage)&&(identical(other.visibleTimeWindow, visibleTimeWindow) || other.visibleTimeWindow == visibleTimeWindow)&&(identical(other.currentFilePath, currentFilePath) || other.currentFilePath == currentFilePath)&&(identical(other.isMonitoringEnabled, isMonitoringEnabled) || other.isMonitoringEnabled == isMonitoringEnabled));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is PitchState&&(identical(other.isRecording, isRecording) || other.isRecording == isRecording)&&(identical(other.isAnalyzing, isAnalyzing) || other.isAnalyzing == isAnalyzing)&&(identical(other.currentPitch, currentPitch) || other.currentPitch == currentPitch)&&const DeepCollectionEquality().equals(other.history, history)&&const DeepCollectionEquality().equals(other.analysisResults, analysisResults)&&(identical(other.errorMessage, errorMessage) || other.errorMessage == errorMessage)&&(identical(other.visibleTimeWindow, visibleTimeWindow) || other.visibleTimeWindow == visibleTimeWindow)&&(identical(other.currentFilePath, currentFilePath) || other.currentFilePath == currentFilePath)&&(identical(other.monitoringVolume, monitoringVolume) || other.monitoringVolume == monitoringVolume)&&(identical(other.isAccompanimentEnabled, isAccompanimentEnabled) || other.isAccompanimentEnabled == isAccompanimentEnabled)&&(identical(other.accompanimentPath, accompanimentPath) || other.accompanimentPath == accompanimentPath));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,isRecording,isAnalyzing,currentPitch,const DeepCollectionEquality().hash(history),const DeepCollectionEquality().hash(analysisResults),errorMessage,visibleTimeWindow,currentFilePath,isMonitoringEnabled);
+int get hashCode => Object.hash(runtimeType,isRecording,isAnalyzing,currentPitch,const DeepCollectionEquality().hash(history),const DeepCollectionEquality().hash(analysisResults),errorMessage,visibleTimeWindow,currentFilePath,monitoringVolume,isAccompanimentEnabled,accompanimentPath);
 
 @override
 String toString() {
-  return 'PitchState(isRecording: $isRecording, isAnalyzing: $isAnalyzing, currentPitch: $currentPitch, history: $history, analysisResults: $analysisResults, errorMessage: $errorMessage, visibleTimeWindow: $visibleTimeWindow, currentFilePath: $currentFilePath, isMonitoringEnabled: $isMonitoringEnabled)';
+  return 'PitchState(isRecording: $isRecording, isAnalyzing: $isAnalyzing, currentPitch: $currentPitch, history: $history, analysisResults: $analysisResults, errorMessage: $errorMessage, visibleTimeWindow: $visibleTimeWindow, currentFilePath: $currentFilePath, monitoringVolume: $monitoringVolume, isAccompanimentEnabled: $isAccompanimentEnabled, accompanimentPath: $accompanimentPath)';
 }
 
 
@@ -311,7 +311,7 @@ abstract mixin class $PitchStateCopyWith<$Res>  {
   factory $PitchStateCopyWith(PitchState value, $Res Function(PitchState) _then) = _$PitchStateCopyWithImpl;
 @useResult
 $Res call({
- bool isRecording, bool isAnalyzing, LivePitch? currentPitch, List<TimestampedPitch> history, List<NoteEvent> analysisResults, String? errorMessage, double visibleTimeWindow, String? currentFilePath, bool isMonitoringEnabled
+ bool isRecording, bool isAnalyzing, LivePitch? currentPitch, List<TimestampedPitch> history, List<NoteEvent> analysisResults, String? errorMessage, double visibleTimeWindow, String? currentFilePath, double monitoringVolume, bool isAccompanimentEnabled, String? accompanimentPath
 });
 
 
@@ -328,7 +328,7 @@ class _$PitchStateCopyWithImpl<$Res>
 
 /// Create a copy of PitchState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? isRecording = null,Object? isAnalyzing = null,Object? currentPitch = freezed,Object? history = null,Object? analysisResults = null,Object? errorMessage = freezed,Object? visibleTimeWindow = null,Object? currentFilePath = freezed,Object? isMonitoringEnabled = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? isRecording = null,Object? isAnalyzing = null,Object? currentPitch = freezed,Object? history = null,Object? analysisResults = null,Object? errorMessage = freezed,Object? visibleTimeWindow = null,Object? currentFilePath = freezed,Object? monitoringVolume = null,Object? isAccompanimentEnabled = null,Object? accompanimentPath = freezed,}) {
   return _then(_self.copyWith(
 isRecording: null == isRecording ? _self.isRecording : isRecording // ignore: cast_nullable_to_non_nullable
 as bool,isAnalyzing: null == isAnalyzing ? _self.isAnalyzing : isAnalyzing // ignore: cast_nullable_to_non_nullable
@@ -338,8 +338,10 @@ as List<TimestampedPitch>,analysisResults: null == analysisResults ? _self.analy
 as List<NoteEvent>,errorMessage: freezed == errorMessage ? _self.errorMessage : errorMessage // ignore: cast_nullable_to_non_nullable
 as String?,visibleTimeWindow: null == visibleTimeWindow ? _self.visibleTimeWindow : visibleTimeWindow // ignore: cast_nullable_to_non_nullable
 as double,currentFilePath: freezed == currentFilePath ? _self.currentFilePath : currentFilePath // ignore: cast_nullable_to_non_nullable
-as String?,isMonitoringEnabled: null == isMonitoringEnabled ? _self.isMonitoringEnabled : isMonitoringEnabled // ignore: cast_nullable_to_non_nullable
-as bool,
+as String?,monitoringVolume: null == monitoringVolume ? _self.monitoringVolume : monitoringVolume // ignore: cast_nullable_to_non_nullable
+as double,isAccompanimentEnabled: null == isAccompanimentEnabled ? _self.isAccompanimentEnabled : isAccompanimentEnabled // ignore: cast_nullable_to_non_nullable
+as bool,accompanimentPath: freezed == accompanimentPath ? _self.accompanimentPath : accompanimentPath // ignore: cast_nullable_to_non_nullable
+as String?,
   ));
 }
 
@@ -424,10 +426,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( bool isRecording,  bool isAnalyzing,  LivePitch? currentPitch,  List<TimestampedPitch> history,  List<NoteEvent> analysisResults,  String? errorMessage,  double visibleTimeWindow,  String? currentFilePath,  bool isMonitoringEnabled)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( bool isRecording,  bool isAnalyzing,  LivePitch? currentPitch,  List<TimestampedPitch> history,  List<NoteEvent> analysisResults,  String? errorMessage,  double visibleTimeWindow,  String? currentFilePath,  double monitoringVolume,  bool isAccompanimentEnabled,  String? accompanimentPath)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _PitchState() when $default != null:
-return $default(_that.isRecording,_that.isAnalyzing,_that.currentPitch,_that.history,_that.analysisResults,_that.errorMessage,_that.visibleTimeWindow,_that.currentFilePath,_that.isMonitoringEnabled);case _:
+return $default(_that.isRecording,_that.isAnalyzing,_that.currentPitch,_that.history,_that.analysisResults,_that.errorMessage,_that.visibleTimeWindow,_that.currentFilePath,_that.monitoringVolume,_that.isAccompanimentEnabled,_that.accompanimentPath);case _:
   return orElse();
 
 }
@@ -445,10 +447,10 @@ return $default(_that.isRecording,_that.isAnalyzing,_that.currentPitch,_that.his
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( bool isRecording,  bool isAnalyzing,  LivePitch? currentPitch,  List<TimestampedPitch> history,  List<NoteEvent> analysisResults,  String? errorMessage,  double visibleTimeWindow,  String? currentFilePath,  bool isMonitoringEnabled)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( bool isRecording,  bool isAnalyzing,  LivePitch? currentPitch,  List<TimestampedPitch> history,  List<NoteEvent> analysisResults,  String? errorMessage,  double visibleTimeWindow,  String? currentFilePath,  double monitoringVolume,  bool isAccompanimentEnabled,  String? accompanimentPath)  $default,) {final _that = this;
 switch (_that) {
 case _PitchState():
-return $default(_that.isRecording,_that.isAnalyzing,_that.currentPitch,_that.history,_that.analysisResults,_that.errorMessage,_that.visibleTimeWindow,_that.currentFilePath,_that.isMonitoringEnabled);case _:
+return $default(_that.isRecording,_that.isAnalyzing,_that.currentPitch,_that.history,_that.analysisResults,_that.errorMessage,_that.visibleTimeWindow,_that.currentFilePath,_that.monitoringVolume,_that.isAccompanimentEnabled,_that.accompanimentPath);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -465,10 +467,10 @@ return $default(_that.isRecording,_that.isAnalyzing,_that.currentPitch,_that.his
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( bool isRecording,  bool isAnalyzing,  LivePitch? currentPitch,  List<TimestampedPitch> history,  List<NoteEvent> analysisResults,  String? errorMessage,  double visibleTimeWindow,  String? currentFilePath,  bool isMonitoringEnabled)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( bool isRecording,  bool isAnalyzing,  LivePitch? currentPitch,  List<TimestampedPitch> history,  List<NoteEvent> analysisResults,  String? errorMessage,  double visibleTimeWindow,  String? currentFilePath,  double monitoringVolume,  bool isAccompanimentEnabled,  String? accompanimentPath)?  $default,) {final _that = this;
 switch (_that) {
 case _PitchState() when $default != null:
-return $default(_that.isRecording,_that.isAnalyzing,_that.currentPitch,_that.history,_that.analysisResults,_that.errorMessage,_that.visibleTimeWindow,_that.currentFilePath,_that.isMonitoringEnabled);case _:
+return $default(_that.isRecording,_that.isAnalyzing,_that.currentPitch,_that.history,_that.analysisResults,_that.errorMessage,_that.visibleTimeWindow,_that.currentFilePath,_that.monitoringVolume,_that.isAccompanimentEnabled,_that.accompanimentPath);case _:
   return null;
 
 }
@@ -480,7 +482,7 @@ return $default(_that.isRecording,_that.isAnalyzing,_that.currentPitch,_that.his
 
 
 class _PitchState implements PitchState {
-  const _PitchState({this.isRecording = false, this.isAnalyzing = false, this.currentPitch, final  List<TimestampedPitch> history = const [], final  List<NoteEvent> analysisResults = const [], this.errorMessage, this.visibleTimeWindow = 5.0, this.currentFilePath, this.isMonitoringEnabled = false}): _history = history,_analysisResults = analysisResults;
+  const _PitchState({this.isRecording = false, this.isAnalyzing = false, this.currentPitch, final  List<TimestampedPitch> history = const [], final  List<NoteEvent> analysisResults = const [], this.errorMessage, this.visibleTimeWindow = 5.0, this.currentFilePath, this.monitoringVolume = 0.0, this.isAccompanimentEnabled = false, this.accompanimentPath}): _history = history,_analysisResults = analysisResults;
   
 
 @override@JsonKey() final  bool isRecording;
@@ -503,7 +505,9 @@ class _PitchState implements PitchState {
 @override final  String? errorMessage;
 @override@JsonKey() final  double visibleTimeWindow;
 @override final  String? currentFilePath;
-@override@JsonKey() final  bool isMonitoringEnabled;
+@override@JsonKey() final  double monitoringVolume;
+@override@JsonKey() final  bool isAccompanimentEnabled;
+@override final  String? accompanimentPath;
 
 /// Create a copy of PitchState
 /// with the given fields replaced by the non-null parameter values.
@@ -515,16 +519,16 @@ _$PitchStateCopyWith<_PitchState> get copyWith => __$PitchStateCopyWithImpl<_Pit
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _PitchState&&(identical(other.isRecording, isRecording) || other.isRecording == isRecording)&&(identical(other.isAnalyzing, isAnalyzing) || other.isAnalyzing == isAnalyzing)&&(identical(other.currentPitch, currentPitch) || other.currentPitch == currentPitch)&&const DeepCollectionEquality().equals(other._history, _history)&&const DeepCollectionEquality().equals(other._analysisResults, _analysisResults)&&(identical(other.errorMessage, errorMessage) || other.errorMessage == errorMessage)&&(identical(other.visibleTimeWindow, visibleTimeWindow) || other.visibleTimeWindow == visibleTimeWindow)&&(identical(other.currentFilePath, currentFilePath) || other.currentFilePath == currentFilePath)&&(identical(other.isMonitoringEnabled, isMonitoringEnabled) || other.isMonitoringEnabled == isMonitoringEnabled));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _PitchState&&(identical(other.isRecording, isRecording) || other.isRecording == isRecording)&&(identical(other.isAnalyzing, isAnalyzing) || other.isAnalyzing == isAnalyzing)&&(identical(other.currentPitch, currentPitch) || other.currentPitch == currentPitch)&&const DeepCollectionEquality().equals(other._history, _history)&&const DeepCollectionEquality().equals(other._analysisResults, _analysisResults)&&(identical(other.errorMessage, errorMessage) || other.errorMessage == errorMessage)&&(identical(other.visibleTimeWindow, visibleTimeWindow) || other.visibleTimeWindow == visibleTimeWindow)&&(identical(other.currentFilePath, currentFilePath) || other.currentFilePath == currentFilePath)&&(identical(other.monitoringVolume, monitoringVolume) || other.monitoringVolume == monitoringVolume)&&(identical(other.isAccompanimentEnabled, isAccompanimentEnabled) || other.isAccompanimentEnabled == isAccompanimentEnabled)&&(identical(other.accompanimentPath, accompanimentPath) || other.accompanimentPath == accompanimentPath));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,isRecording,isAnalyzing,currentPitch,const DeepCollectionEquality().hash(_history),const DeepCollectionEquality().hash(_analysisResults),errorMessage,visibleTimeWindow,currentFilePath,isMonitoringEnabled);
+int get hashCode => Object.hash(runtimeType,isRecording,isAnalyzing,currentPitch,const DeepCollectionEquality().hash(_history),const DeepCollectionEquality().hash(_analysisResults),errorMessage,visibleTimeWindow,currentFilePath,monitoringVolume,isAccompanimentEnabled,accompanimentPath);
 
 @override
 String toString() {
-  return 'PitchState(isRecording: $isRecording, isAnalyzing: $isAnalyzing, currentPitch: $currentPitch, history: $history, analysisResults: $analysisResults, errorMessage: $errorMessage, visibleTimeWindow: $visibleTimeWindow, currentFilePath: $currentFilePath, isMonitoringEnabled: $isMonitoringEnabled)';
+  return 'PitchState(isRecording: $isRecording, isAnalyzing: $isAnalyzing, currentPitch: $currentPitch, history: $history, analysisResults: $analysisResults, errorMessage: $errorMessage, visibleTimeWindow: $visibleTimeWindow, currentFilePath: $currentFilePath, monitoringVolume: $monitoringVolume, isAccompanimentEnabled: $isAccompanimentEnabled, accompanimentPath: $accompanimentPath)';
 }
 
 
@@ -535,7 +539,7 @@ abstract mixin class _$PitchStateCopyWith<$Res> implements $PitchStateCopyWith<$
   factory _$PitchStateCopyWith(_PitchState value, $Res Function(_PitchState) _then) = __$PitchStateCopyWithImpl;
 @override @useResult
 $Res call({
- bool isRecording, bool isAnalyzing, LivePitch? currentPitch, List<TimestampedPitch> history, List<NoteEvent> analysisResults, String? errorMessage, double visibleTimeWindow, String? currentFilePath, bool isMonitoringEnabled
+ bool isRecording, bool isAnalyzing, LivePitch? currentPitch, List<TimestampedPitch> history, List<NoteEvent> analysisResults, String? errorMessage, double visibleTimeWindow, String? currentFilePath, double monitoringVolume, bool isAccompanimentEnabled, String? accompanimentPath
 });
 
 
@@ -552,7 +556,7 @@ class __$PitchStateCopyWithImpl<$Res>
 
 /// Create a copy of PitchState
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? isRecording = null,Object? isAnalyzing = null,Object? currentPitch = freezed,Object? history = null,Object? analysisResults = null,Object? errorMessage = freezed,Object? visibleTimeWindow = null,Object? currentFilePath = freezed,Object? isMonitoringEnabled = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? isRecording = null,Object? isAnalyzing = null,Object? currentPitch = freezed,Object? history = null,Object? analysisResults = null,Object? errorMessage = freezed,Object? visibleTimeWindow = null,Object? currentFilePath = freezed,Object? monitoringVolume = null,Object? isAccompanimentEnabled = null,Object? accompanimentPath = freezed,}) {
   return _then(_PitchState(
 isRecording: null == isRecording ? _self.isRecording : isRecording // ignore: cast_nullable_to_non_nullable
 as bool,isAnalyzing: null == isAnalyzing ? _self.isAnalyzing : isAnalyzing // ignore: cast_nullable_to_non_nullable
@@ -562,8 +566,10 @@ as List<TimestampedPitch>,analysisResults: null == analysisResults ? _self._anal
 as List<NoteEvent>,errorMessage: freezed == errorMessage ? _self.errorMessage : errorMessage // ignore: cast_nullable_to_non_nullable
 as String?,visibleTimeWindow: null == visibleTimeWindow ? _self.visibleTimeWindow : visibleTimeWindow // ignore: cast_nullable_to_non_nullable
 as double,currentFilePath: freezed == currentFilePath ? _self.currentFilePath : currentFilePath // ignore: cast_nullable_to_non_nullable
-as String?,isMonitoringEnabled: null == isMonitoringEnabled ? _self.isMonitoringEnabled : isMonitoringEnabled // ignore: cast_nullable_to_non_nullable
-as bool,
+as String?,monitoringVolume: null == monitoringVolume ? _self.monitoringVolume : monitoringVolume // ignore: cast_nullable_to_non_nullable
+as double,isAccompanimentEnabled: null == isAccompanimentEnabled ? _self.isAccompanimentEnabled : isAccompanimentEnabled // ignore: cast_nullable_to_non_nullable
+as bool,accompanimentPath: freezed == accompanimentPath ? _self.accompanimentPath : accompanimentPath // ignore: cast_nullable_to_non_nullable
+as String?,
   ));
 }
 

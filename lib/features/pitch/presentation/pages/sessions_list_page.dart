@@ -1,6 +1,7 @@
 // Copyright (c) 2026. Licensed under the MIT OR Apache-2.0 License.
 // SPDX-License-Identifier: MIT OR Apache-2.0
 import 'package:flutter/material.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:pure_pitch/core/extensions/context_extension.dart';
@@ -39,14 +40,56 @@ class SessionsListPage extends ConsumerWidget {
               return Dismissible(
                 key: Key(session.id.toString()),
                 background: Container(
+                  color: Colors.cyan.withValues(alpha: 0.8),
+                  alignment: Alignment.centerLeft,
+                  padding: const EdgeInsets.only(left: 20),
+                  child: const Row(
+                    children: [
+                      Icon(Icons.library_music, color: Colors.white),
+                      SizedBox(width: 10),
+                      Text('Import Acc.', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                    ],
+                  ),
+                ),
+                secondaryBackground: Container(
                   color: Colors.redAccent,
                   alignment: Alignment.centerRight,
                   padding: const EdgeInsets.only(right: 20),
                   child: const Icon(Icons.delete, color: Colors.white),
                 ),
-                onDismissed: (_) async {
-                  await ref.read(sessionRepositoryProvider).deleteSession(session.id);
-                  ref.invalidate(savedSessionsProvider);
+                confirmDismiss: (direction) async {
+                  if (direction == DismissDirection.startToEnd) {
+                    // Import logic
+                    final result = await FilePicker.platform.pickFiles(
+                      type: FileType.custom,
+                      allowedExtensions: ['mp3', 'wav', 'aac'],
+                    );
+                    if (result != null && result.files.single.path != null) {
+                       final detailed = await ref.read(sessionRepositoryProvider).findSessionByFile(
+                         fileName: session.fileName,
+                         fileSize: session.fileSize,
+                       );
+                       if (detailed != null) {
+                         await ref.read(sessionRepositoryProvider).saveSession(
+                           filePath: session.filePath,
+                           fileName: session.fileName,
+                           fileSize: session.fileSize,
+                           durationSeconds: session.durationSeconds,
+                           noteEvents: detailed.events,
+                           accompanimentPath: result.files.single.path!,
+                         );
+                         ref.invalidate(savedSessionsProvider);
+                       }
+                    }
+                    return false; // Don't dismiss
+                  }
+                  return true; // Dismiss for delete
+                },
+                onDismissed: (direction) async {
+                  if (direction == DismissDirection.endToStart) {
+                    await ref.read(sessionRepositoryProvider).deleteSession(session.id);
+                    ref.invalidate(savedSessionsProvider);
+                  }
                 },
                 child: ListTile(
                   leading: Icon(
