@@ -6,6 +6,7 @@ import 'package:clock/clock.dart';
 import 'package:pure_pitch/src/rust/api/pitch.dart';
 import 'package:pure_pitch/features/pitch/domain/models/pitch_state.dart';
 import 'package:pure_pitch/features/pitch/domain/utils/pitch_coordinate_mapper.dart';
+import 'package:pure_pitch/features/pitch/presentation/widgets/pitch_timeline.dart';
 
 class PitchVisualizer extends StatefulWidget {
   final List<TimestampedPitch> history;
@@ -105,23 +106,34 @@ class _PitchVisualizerState extends State<PitchVisualizer> {
                 child: SingleChildScrollView(
                   controller: _scrollController,
                   scrollDirection: Axis.horizontal,
-                  child: CustomPaint(
-                    size: Size(
-                      max(totalWidth, constraints.maxWidth),
-                      constraints.maxHeight,
-                    ),
-                    painter: _PitchPainter(
-                      history: widget.history,
-                      noteEvents: widget.noteEvents,
-                      isRecording: widget.isRecording,
-                      pixelsPerSecond: pixelsPerSecond,
-                      visibleTimeWindow: widget.visibleTimeWindow,
-                      minNote: effectiveMinNote,
-                      maxNote: effectiveMaxNote,
-                      viewportWidth: constraints.maxWidth,
-                      now: now,
-                      drawLabels: false,
-                    ),
+                  child: Column(
+                    children: [
+                      Expanded(
+                        child: CustomPaint(
+                          size: Size(
+                            max(totalWidth, constraints.maxWidth),
+                            constraints.maxHeight - 30, // Leave space for timeline
+                          ),
+                          painter: _PitchPainter(
+                            history: widget.history,
+                            noteEvents: widget.noteEvents,
+                            isRecording: widget.isRecording,
+                            pixelsPerSecond: pixelsPerSecond,
+                            visibleTimeWindow: widget.visibleTimeWindow,
+                            minNote: effectiveMinNote,
+                            maxNote: effectiveMaxNote,
+                            viewportWidth: constraints.maxWidth,
+                            now: now,
+                            drawLabels: false,
+                          ),
+                        ),
+                      ),
+                      PitchTimeline(
+                        pixelsPerSecond: pixelsPerSecond,
+                        totalWidth: max(totalWidth, constraints.maxWidth),
+                        scrollOffset: 0, // Since it's inside the scrollview, we don't need offset for internal painting
+                      ),
+                    ],
                   ),
                 ),
               ),
@@ -130,7 +142,7 @@ class _PitchVisualizerState extends State<PitchVisualizer> {
               Positioned(
                 left: 0,
                 top: 0,
-                bottom: 0,
+                bottom: 30, // Align with canvas, leave timeline space
                 width: 40,
                 child: Container(
                   decoration: BoxDecoration(

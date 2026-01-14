@@ -49,6 +49,12 @@ class SessionsListPage extends ConsumerWidget {
                   ref.invalidate(savedSessionsProvider);
                 },
                 child: ListTile(
+                  leading: Icon(
+                    Icons.music_note,
+                    color: session.accompanimentPath != null
+                        ? Colors.cyanAccent
+                        : Colors.white24,
+                  ),
                   title: Text(session.fileName, style: const TextStyle(color: Colors.white)),
                   subtitle: Text(
                     '${(session.durationSeconds).toStringAsFixed(1)}s • ${session.createdAt.toLocal().toString().split('.')[0]}',
