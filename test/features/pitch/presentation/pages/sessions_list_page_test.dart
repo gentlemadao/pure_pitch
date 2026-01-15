@@ -1,9 +1,11 @@
 // Copyright (c) 2026. Licensed under the MIT OR Apache-2.0 License.
 // SPDX-License-Identifier: MIT OR Apache-2.0
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:pure_pitch/core/localization/generated/l10n.dart';
 import 'package:pure_pitch/features/pitch/data/repositories/session_repository.dart';
 import 'package:pure_pitch/features/pitch/presentation/pages/sessions_list_page.dart';
 import 'package:pure_pitch/core/database/app_database.dart' as db;
@@ -25,7 +27,14 @@ void main() {
         overrides: [
           sessionRepositoryProvider.overrideWithValue(mockRepository),
         ],
-        child: const MaterialApp(
+        child: MaterialApp(
+          localizationsDelegates: [
+            S.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          supportedLocales: S.delegate.supportedLocales,
           home: SessionsListPage(),
         ),
       ),
@@ -54,7 +63,14 @@ void main() {
         overrides: [
           sessionRepositoryProvider.overrideWithValue(mockRepository),
         ],
-        child: const MaterialApp(
+        child: MaterialApp(
+          localizationsDelegates: [
+            S.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          supportedLocales: S.delegate.supportedLocales,
           home: SessionsListPage(),
         ),
       ),

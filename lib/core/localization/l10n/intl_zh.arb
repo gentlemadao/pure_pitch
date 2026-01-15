@@ -20,5 +20,57 @@
         "type": "int"
       }
     }
-  }
+  },
+  "savedSessions": "已保存的会话",
+  "noSavedSessions": "没有保存的会话",
+  "importAccompaniment": "导入伴奏",
+  "deleteSession": "删除会话",
+  "deleteSessionConfirmation": "您确定要删除此会话吗？此操作无法撤销。",
+  "cancel": "取消",
+  "delete": "删除",
+  "error": "错误: {error}",
+  "@error": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "toolsAndHistory": "工具与历史",
+  "accompanimentLabel": "伴奏",
+  "microphonePermissionRequired": "录音需要麦克风权限。",
+  "failedToStartCapture": "无法开始录音: {error}",
+  "@failedToStartCapture": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "loadingCache": "正在从缓存加载 {fileName} 的分析结果",
+  "@loadingCache": {
+    "placeholders": {
+      "fileName": {
+        "type": "String"
+      }
+    }
+  },
+  "analysisCompleted": "分析完成。找到 {count} 个音符。",
+  "@analysisCompleted": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "analysisDuration": "分析时长: {duration}秒",
+  "@analysisDuration": {
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
+  "failedToPlayOriginalAudio": "无法播放原声",
+  "failedToPlayAccompaniment": "无法播放伴奏"
 }

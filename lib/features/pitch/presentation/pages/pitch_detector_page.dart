@@ -3,13 +3,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:pure_pitch/core/localization/generated/l10n.dart';
 import 'package:talker_flutter/talker_flutter.dart';
 
-import 'package:pure_pitch/core/extensions/context_extension.dart';
 import 'package:pure_pitch/core/logger/talker.dart';
 import 'package:pure_pitch/features/pitch/presentation/providers/pitch_provider.dart';
 import 'package:pure_pitch/features/pitch/presentation/widgets/pitch_visualizer.dart';
 import 'package:pure_pitch/features/pitch/presentation/pages/sessions_list_page.dart';
+import 'package:pure_pitch/features/settings/presentation/providers/locale_provider.dart';
 
 class PitchDetectorPage extends ConsumerStatefulWidget {
   const PitchDetectorPage({super.key});
@@ -76,12 +77,12 @@ class _PitchDetectorPageState extends ConsumerState<PitchDetectorPage>
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(context.l10n.appTitle),
+        title: Text(S.of(context).appTitle),
         actions: [
           IconButton(
             onPressed: () => ref.read(pitchProvider.notifier).analyzeFile(),
             icon: const Icon(Icons.add_circle_outline),
-            tooltip: context.l10n.analyzeAudioFile,
+            tooltip: S.of(context).analyzeAudioFile,
           ),
         ],
       ),
@@ -98,7 +99,7 @@ class _PitchDetectorPageState extends ConsumerState<PitchDetectorPage>
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   Text(
-                    context.l10n.appTitle,
+                    S.of(context).appTitle,
                     style: const TextStyle(
                       color: Colors.black,
                       fontSize: 24,
@@ -106,16 +107,16 @@ class _PitchDetectorPageState extends ConsumerState<PitchDetectorPage>
                     ),
                   ),
                   const SizedBox(height: 8),
-                  const Text(
-                    'Tools & History',
-                    style: TextStyle(color: Colors.black87),
+                  Text(
+                    S.of(context).toolsAndHistory,
+                    style: const TextStyle(color: Colors.black87),
                   ),
                 ],
               ),
             ),
             ListTile(
               leading: const Icon(Icons.history),
-              title: const Text('Saved Sessions'),
+              title: Text(S.of(context).savedSessions),
               onTap: () {
                 Navigator.pop(context); // Close drawer
                 Navigator.of(context).push(
@@ -125,7 +126,7 @@ class _PitchDetectorPageState extends ConsumerState<PitchDetectorPage>
             ),
             ListTile(
               leading: const Icon(Icons.bug_report),
-              title: const Text('View Logs'),
+              title: Text(S.of(context).viewLogs),
               onTap: () {
                 Navigator.pop(context); // Close drawer
                 Navigator.of(context).push(
@@ -134,6 +135,25 @@ class _PitchDetectorPageState extends ConsumerState<PitchDetectorPage>
                   ),
                 );
               },
+            ),
+            const Divider(),
+            ListTile(
+              leading: const Icon(Icons.language),
+              title: const Text('Language / 语言'),
+              trailing: DropdownButton<String>(
+                value: Localizations.localeOf(context).languageCode,
+                items: const [
+                  DropdownMenuItem(value: 'en', child: Text('English')),
+                  DropdownMenuItem(value: 'zh', child: Text('中文')),
+                ],
+                onChanged: (value) {
+                  if (value != null) {
+                    ref.read(appLocaleProvider.notifier).setLocale(Locale(value));
+                    Navigator.pop(context);
+                  }
+                },
+                underline: const SizedBox(),
+              ),
             ),
           ],
         ),
@@ -200,7 +220,7 @@ class _PitchDetectorPageState extends ConsumerState<PitchDetectorPage>
                       _ControlChip(
                         onPressed: () => ref.read(pitchProvider.notifier).toggleAccompaniment(!pitchState.isAccompanimentEnabled),
                         icon: Icons.library_music,
-                        label: 'Acc.',
+                        label: S.of(context).accompanimentLabel,
                         isActive: pitchState.isAccompanimentEnabled,
                       ),
                   ],
@@ -215,7 +235,7 @@ class _PitchDetectorPageState extends ConsumerState<PitchDetectorPage>
                       const CircularProgressIndicator(color: Colors.cyanAccent),
                       const SizedBox(height: 10),
                       Text(
-                        context.l10n.analyzingAudio,
+                        S.of(context).analyzingAudio,
                         style: const TextStyle(color: Colors.cyanAccent),
                       ),
                     ],
@@ -265,9 +285,7 @@ class _PitchDetectorPageState extends ConsumerState<PitchDetectorPage>
                         child: Column(
                           children: [
                             Text(
-                              context.l10n.hz(
-                                currentPitch.hz.toStringAsFixed(1),
-                              ),
+                              S.of(context).hz(currentPitch.hz.toStringAsFixed(1)),
                               style: Theme.of(context).textTheme.displayMedium
                                   ?.copyWith(
                                     fontWeight: FontWeight.bold,
@@ -275,7 +293,7 @@ class _PitchDetectorPageState extends ConsumerState<PitchDetectorPage>
                                   ),
                             ),
                             Text(
-                              context.l10n.midi(currentPitch.midiNote),
+                              S.of(context).midi(currentPitch.midiNote),
                               style: Theme.of(context).textTheme.titleLarge
                                   ?.copyWith(color: Colors.white),
                             ),
@@ -285,7 +303,7 @@ class _PitchDetectorPageState extends ConsumerState<PitchDetectorPage>
                     ] else if (!isRecording) ...[
                       const SizedBox(height: 100),
                       Text(
-                        context.l10n.readyToRecord,
+                        S.of(context).readyToRecord,
                         style: const TextStyle(
                           fontSize: 24,
                           color: Colors.white54,

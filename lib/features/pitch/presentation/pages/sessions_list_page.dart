@@ -3,11 +3,11 @@
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:pure_pitch/core/extensions/context_extension.dart';
-import 'package:pure_pitch/features/pitch/data/repositories/session_repository.dart';
-import 'package:pure_pitch/core/database/app_database.dart' as db;
-import 'package:pure_pitch/features/pitch/presentation/providers/pitch_provider.dart';
+import 'package:pure_pitch/core/localization/generated/l10n.dart';
+
+import '../../../../core/database/app_database.dart' as db;
+import '../../data/repositories/session_repository.dart';
+import '../providers/pitch_provider.dart';
 
 // part 'sessions_list_page.g.dart';
 
@@ -24,13 +24,13 @@ class SessionsListPage extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Saved Sessions'),
+        title: Text(S.of(context).savedSessions),
       ),
       body: sessionsAsync.when(
         data: (List<db.Session> sessions) {
           if (sessions.isEmpty) {
-            return const Center(
-              child: Text('No saved sessions', style: TextStyle(color: Colors.white54)),
+            return Center(
+              child: Text(S.of(context).noSavedSessions, style: const TextStyle(color: Colors.white54)),
             );
           }
           return ListView.builder(
@@ -43,11 +43,11 @@ class SessionsListPage extends ConsumerWidget {
                   color: Colors.cyan.withValues(alpha: 0.8),
                   alignment: Alignment.centerLeft,
                   padding: const EdgeInsets.only(left: 20),
-                  child: const Row(
+                  child: Row(
                     children: [
-                      Icon(Icons.library_music, color: Colors.white),
-                      SizedBox(width: 10),
-                      Text('Import Acc.', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                      const Icon(Icons.library_music, color: Colors.white),
+                      const SizedBox(width: 10),
+                      Text(S.of(context).importAccompaniment, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
                     ],
                   ),
                 ),
@@ -82,15 +82,38 @@ class SessionsListPage extends ConsumerWidget {
                        }
                     }
                     return false; // Don't dismiss
+                  } else if (direction == DismissDirection.endToStart) {
+                    // Show confirmation dialog
+                    final confirmed = await showDialog<bool>(
+                      context: context,
+                      builder: (context) => AlertDialog(
+                        title: Text(S.of(context).deleteSession),
+                        content: Text(S.of(context).deleteSessionConfirmation),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(context, false),
+                            child: Text(S.of(context).cancel),
+                          ),
+                          TextButton(
+                            onPressed: () => Navigator.pop(context, true),
+                            style: TextButton.styleFrom(foregroundColor: Colors.redAccent),
+                            child: Text(S.of(context).delete),
+                          ),
+                        ],
+                      ),
+                    );
+
+                    if (confirmed == true) {
+                      // Delete logic
+                      await ref.read(sessionRepositoryProvider).deleteSession(session.id);
+                      ref.invalidate(savedSessionsProvider);
+                      return true;
+                    }
+                    return false;
                   }
-                  return true; // Dismiss for delete
+                  return false;
                 },
-                onDismissed: (direction) async {
-                  if (direction == DismissDirection.endToStart) {
-                    await ref.read(sessionRepositoryProvider).deleteSession(session.id);
-                    ref.invalidate(savedSessionsProvider);
-                  }
-                },
+                onDismissed: (direction) {},
                 child: ListTile(
                   leading: Icon(
                     Icons.music_note,
@@ -123,7 +146,7 @@ class SessionsListPage extends ConsumerWidget {
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, s) => Center(child: Text('Error: $e')),
+        error: (e, s) => Center(child: Text(S.of(context).error(e))),
       ),
     );
   }

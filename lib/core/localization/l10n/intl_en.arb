@@ -20,5 +20,57 @@
         "type": "int"
       }
     }
-  }
+  },
+  "savedSessions": "Saved Sessions",
+  "noSavedSessions": "No saved sessions",
+  "importAccompaniment": "Import Acc.",
+  "deleteSession": "Delete Session",
+  "deleteSessionConfirmation": "Are you sure you want to delete this session? This action cannot be undone.",
+  "cancel": "Cancel",
+  "delete": "Delete",
+  "error": "Error: {error}",
+  "@error": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "toolsAndHistory": "Tools & History",
+  "accompanimentLabel": "Acc.",
+  "microphonePermissionRequired": "Microphone permission is required to record.",
+  "failedToStartCapture": "Failed to start capture: {error}",
+  "@failedToStartCapture": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "loadingCache": "Loading analysis results from cache for {fileName}",
+  "@loadingCache": {
+    "placeholders": {
+      "fileName": {
+        "type": "String"
+      }
+    }
+  },
+  "analysisCompleted": "Analysis completed. Found {count} notes.",
+  "@analysisCompleted": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "analysisDuration": "Analysis duration: {duration}s",
+  "@analysisDuration": {
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
+  "failedToPlayOriginalAudio": "Failed to play original audio",
+  "failedToPlayAccompaniment": "Failed to play accompaniment"
 }

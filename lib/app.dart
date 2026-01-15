@@ -7,16 +7,20 @@ import 'package:pure_pitch/core/localization/generated/l10n.dart';
 import 'package:pure_pitch/core/router/router.dart';
 import 'package:pure_pitch/core/theme/app_theme.dart';
 
+import 'package:pure_pitch/features/settings/presentation/providers/locale_provider.dart';
+
 class App extends ConsumerWidget {
   const App({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(goRouterProvider);
+    final locale = ref.watch(appLocaleProvider);
     return MaterialApp.router(
       onGenerateTitle: (context) => S.of(context).appTitle,
       theme: AppTheme.darkTheme,
       routerConfig: router,
+      locale: locale,
       localizationsDelegates: const [
         S.delegate,
         GlobalMaterialLocalizations.delegate,

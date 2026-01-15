@@ -108,6 +108,161 @@ class S {
   String midi(int value) {
     return Intl.message('MIDI: $value', name: 'midi', desc: '', args: [value]);
   }
+
+  /// `Saved Sessions`
+  String get savedSessions {
+    return Intl.message(
+      'Saved Sessions',
+      name: 'savedSessions',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `No saved sessions`
+  String get noSavedSessions {
+    return Intl.message(
+      'No saved sessions',
+      name: 'noSavedSessions',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Import Acc.`
+  String get importAccompaniment {
+    return Intl.message(
+      'Import Acc.',
+      name: 'importAccompaniment',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Delete Session`
+  String get deleteSession {
+    return Intl.message(
+      'Delete Session',
+      name: 'deleteSession',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Are you sure you want to delete this session? This action cannot be undone.`
+  String get deleteSessionConfirmation {
+    return Intl.message(
+      'Are you sure you want to delete this session? This action cannot be undone.',
+      name: 'deleteSessionConfirmation',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Cancel`
+  String get cancel {
+    return Intl.message('Cancel', name: 'cancel', desc: '', args: []);
+  }
+
+  /// `Delete`
+  String get delete {
+    return Intl.message('Delete', name: 'delete', desc: '', args: []);
+  }
+
+  /// `Error: {error}`
+  String error(Object error) {
+    return Intl.message(
+      'Error: $error',
+      name: 'error',
+      desc: '',
+      args: [error],
+    );
+  }
+
+  /// `Tools & History`
+  String get toolsAndHistory {
+    return Intl.message(
+      'Tools & History',
+      name: 'toolsAndHistory',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Acc.`
+  String get accompanimentLabel {
+    return Intl.message('Acc.', name: 'accompanimentLabel', desc: '', args: []);
+  }
+
+  /// `Microphone permission is required to record.`
+  String get microphonePermissionRequired {
+    return Intl.message(
+      'Microphone permission is required to record.',
+      name: 'microphonePermissionRequired',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Failed to start capture: {error}`
+  String failedToStartCapture(Object error) {
+    return Intl.message(
+      'Failed to start capture: $error',
+      name: 'failedToStartCapture',
+      desc: '',
+      args: [error],
+    );
+  }
+
+  /// `Loading analysis results from cache for {fileName}`
+  String loadingCache(String fileName) {
+    return Intl.message(
+      'Loading analysis results from cache for $fileName',
+      name: 'loadingCache',
+      desc: '',
+      args: [fileName],
+    );
+  }
+
+  /// `Analysis completed. Found {count} notes.`
+  String analysisCompleted(int count) {
+    return Intl.message(
+      'Analysis completed. Found $count notes.',
+      name: 'analysisCompleted',
+      desc: '',
+      args: [count],
+    );
+  }
+
+  /// `Analysis duration: {duration}s`
+  String analysisDuration(String duration) {
+    return Intl.message(
+      'Analysis duration: ${duration}s',
+      name: 'analysisDuration',
+      desc: '',
+      args: [duration],
+    );
+  }
+
+  /// `Failed to play original audio`
+  String get failedToPlayOriginalAudio {
+    return Intl.message(
+      'Failed to play original audio',
+      name: 'failedToPlayOriginalAudio',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Failed to play accompaniment`
+  String get failedToPlayAccompaniment {
+    return Intl.message(
+      'Failed to play accompaniment',
+      name: 'failedToPlayAccompaniment',
+      desc: '',
+      args: [],
+    );
+  }
 }
 
 class AppLocalizationDelegate extends LocalizationsDelegate<S> {

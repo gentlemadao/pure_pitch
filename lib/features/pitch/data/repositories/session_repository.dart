@@ -1,7 +1,6 @@
 // Copyright (c) 2026. Licensed under the MIT OR Apache-2.0 License.
 // SPDX-License-Identifier: MIT OR Apache-2.0
 import 'package:drift/drift.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:pure_pitch/core/database/app_database.dart';
 import 'package:pure_pitch/src/rust/api/pitch.dart' as rust;

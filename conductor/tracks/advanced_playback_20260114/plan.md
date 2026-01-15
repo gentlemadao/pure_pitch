@@ -22,7 +22,7 @@
 - [x] Task: Refactor `PitchDetectorPage` Control Layout (Green Phase)
 - [x] Task: Conductor - User Manual Verification 'Phase 3: Logic - Multi-level Volume & Accompaniment Playback' (Protocol in workflow.md)
 
-## Phase 3.5: UI Refinement - Drawer Navigation
+## Phase 3.5: UI Refinement - Drawer Navigation [checkpoint: 4c788f7]
 - [x] Task: Implement Navigation Drawer in `PitchDetectorPage` (Green Phase)
     - [x] Move History and Logs navigation to the drawer.
     - [x] Replace "..." menu with a Drawer toggle.

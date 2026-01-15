@@ -15,21 +15,16 @@ PurePitch aims to be a cross-platform, high-performance, and premium local pitch
 * **Offline Audio-to-MIDI**: Leveraging the Basic Pitch model to convert external audio or local recordings into MIDI note sequences.
 
 * **High-Precision & Stable Analysis**: Leveraging the Basic Pitch model combined with hysteresis/inertia algorithms to provide professional, continuous note extraction, preventing melody fragmentation.
-
 * **Session Recording & Analysis**: Support for saving vocal sessions with analytical data playback overlays.
-
-
+* **Horizontal Timeline**: A synchronized horizontal time ruler providing precise visual context for pitch events.
+* **Accompaniment Sync**: Support for importing and playing backing tracks in sync with vocal recording and review.
 
 # Visual Identity & UX
-
 * **Immersive Premium Feel**: A professional modern interface combined with subtle background textures and fluid motion transitions.
-
 * **Glowing Interactive Elements**: Key controls and pitch curves feature "glowing" visual effects to enhance tech-immersion.
-
 * **Buttery Smooth Performance**: Optimized for high refresh rate displays, ensuring pitch curves flow like silk.
-
 * **Adaptive Time Scaling**: The pitch visualization automatically scales between 5 and 10 seconds based on the screen width, with manual zoom controls and persistent session history.
-
+* **Refined Control Layout**: A clean interface with a navigation drawer for secondary actions and a focused control bar for real-time audio settings.
 * **Continuous Session Review**: Users can scroll back through their entire performance history after a recording session ends.
 
 # Competitive Advantage

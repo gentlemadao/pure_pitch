@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'pitch_provider.dart';
+part of 'locale_provider.dart';
 
 // **************************************************************************
 // RiverpodGenerator
@@ -9,50 +9,50 @@ part of 'pitch_provider.dart';
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
 
-@ProviderFor(Pitch)
-final pitchProvider = PitchProvider._();
+@ProviderFor(AppLocale)
+final appLocaleProvider = AppLocaleProvider._();
 
-final class PitchProvider extends $NotifierProvider<Pitch, PitchState> {
-  PitchProvider._()
+final class AppLocaleProvider extends $NotifierProvider<AppLocale, Locale> {
+  AppLocaleProvider._()
     : super(
         from: null,
         argument: null,
         retry: null,
-        name: r'pitchProvider',
+        name: r'appLocaleProvider',
         isAutoDispose: true,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
 
   @override
-  String debugGetCreateSourceHash() => _$pitchHash();
+  String debugGetCreateSourceHash() => _$appLocaleHash();
 
   @$internal
   @override
-  Pitch create() => Pitch();
+  AppLocale create() => AppLocale();
 
   /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(PitchState value) {
+  Override overrideWithValue(Locale value) {
     return $ProviderOverride(
       origin: this,
-      providerOverride: $SyncValueProvider<PitchState>(value),
+      providerOverride: $SyncValueProvider<Locale>(value),
     );
   }
 }
 
-String _$pitchHash() => r'7a1296345ae2b564e52fb4f43acd90979e48fe8d';
+String _$appLocaleHash() => r'7d758ab4917284464a889167be2006b5bfb840ce';
 
-abstract class _$Pitch extends $Notifier<PitchState> {
-  PitchState build();
+abstract class _$AppLocale extends $Notifier<Locale> {
+  Locale build();
   @$mustCallSuper
   @override
   void runBuild() {
-    final ref = this.ref as $Ref<PitchState, PitchState>;
+    final ref = this.ref as $Ref<Locale, Locale>;
     final element =
         ref.element
             as $ClassProviderElement<
-              AnyNotifier<PitchState, PitchState>,
-              PitchState,
+              AnyNotifier<Locale, Locale>,
+              Locale,
               Object?,
               Object?
             >;

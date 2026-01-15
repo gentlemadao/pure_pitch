@@ -40,7 +40,6 @@ void main() {
           fileName: fileName,
           fileSize: fileSize,
         )).thenAnswer((_) async {
-          print('MOCK_CALLED: findSessionByFile');
           return SessionWithEvents(
             session: db.Session(
               id: 1,
@@ -57,7 +56,7 @@ void main() {
         });
 
     // Keep provider alive
-    final subscription = container.listen(pitchProvider, (_, __) {});
+    final subscription = container.listen(pitchProvider, (_, _) {});
 
     final notifier = container.read(pitchProvider.notifier);
     

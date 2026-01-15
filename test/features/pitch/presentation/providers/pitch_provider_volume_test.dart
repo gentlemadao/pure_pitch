@@ -1,7 +1,6 @@
 // Copyright (c) 2026. Licensed under the MIT OR Apache-2.0 License.
 // SPDX-License-Identifier: MIT OR Apache-2.0
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pure_pitch/features/pitch/presentation/providers/pitch_provider.dart';
 import 'package:riverpod/riverpod.dart';
 
 void main() {
@@ -13,7 +12,7 @@ void main() {
     // Actually current state has isMonitoringEnabled (bool). 
     // We need to change it to monitoringVolume (double).
     
-    final notifier = container.read(pitchProvider.notifier);
+    // container.read(pitchProvider.notifier); // Trigger init if needed, but not used.
     
     // We haven't implemented monitoringVolume yet, so this test defines the target API.
   });

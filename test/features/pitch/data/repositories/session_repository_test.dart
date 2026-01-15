@@ -1,6 +1,5 @@
 // Copyright (c) 2026. Licensed under the MIT OR Apache-2.0 License.
 // SPDX-License-Identifier: MIT OR Apache-2.0
-import 'package:drift/drift.dart' hide isNull, isNotNull;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pure_pitch/core/database/app_database.dart';
@@ -30,7 +29,6 @@ void main() {
     });
 
     test('should save and retrieve a session with note events', () async {
-      final now = DateTime.now();
       
       // Save
       await repository.saveSession(

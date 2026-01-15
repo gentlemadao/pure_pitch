@@ -10,6 +10,9 @@ import 'package:pure_pitch/src/rust/api/pitch.dart';
 import 'package:pure_pitch/src/rust/frb_generated.dart';
 import 'package:talker_riverpod_logger/talker_riverpod_logger.dart';
 
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:pure_pitch/core/services/storage_service.dart';
+
 Future<void> bootstrap() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -23,11 +26,15 @@ Future<void> bootstrap() async {
     return true;
   };
 
+  final prefs = await SharedPreferences.getInstance();
   await RustLib.init();
   await initOrt();
 
   runApp(
     ProviderScope(
+      overrides: [
+        sharedPreferencesProvider.overrideWithValue(prefs),
+      ],
       observers: [
         TalkerRiverpodObserver(
           talker: talker,
