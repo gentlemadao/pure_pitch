@@ -1,0 +1,8 @@
+{
+  "track_id": "echo_cancellation_20260114",
+  "type": "feature",
+  "status": "new",
+  "created_at": "2026-01-14T18:45:00Z",
+  "updated_at": "2026-01-14T18:45:00Z",
+  "description": "现在能在录音时播放伴奏，但没有回声消除功能，实现一个跨5端的回声消除方案"
+}
