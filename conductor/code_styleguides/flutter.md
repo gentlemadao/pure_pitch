@@ -4,7 +4,14 @@
 *   **Widgets**: Prefer `ConsumerWidget` or `ConsumerStatefulWidget`.
 *   **Constructors**: Use `const` constructors wherever possible.
 *   **Build Method**: Keep under 100 lines. Extract complex logic to `presentation/widgets/`.
-*   **Internationalization**: MANDATORY use of `context.l10n` for all strings. No hardcoded text.
+
+## Internationalization (i18n)
+*   **Library**: Use `intl_utils` for ARB file generation.
+*   **Workflow**: 
+    1. Define keys in `lib/core/localization/l10n/intl_en.arb`.
+    2. Run `dart run intl_utils:generate`.
+    3. Access via `context.l10n` (preferred) or `S.current` (if no context).
+*   **Rule**: ABSOLUTELY NO hardcoded strings in UI widgets.
 
 ## Routing (GoRouter)
 *   **Configuration**: located in `core/router/`.

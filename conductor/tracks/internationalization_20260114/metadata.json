@@ -1,8 +1,0 @@
-{
-  "track_id": "internationalization_20260114",
-  "type": "feature",
-  "status": "new",
-  "created_at": "2026-01-14T18:30:00Z",
-  "updated_at": "2026-01-14T18:30:00Z",
-  "description": "对所有用到的字符串进行多语言处理，使用intl_utils库适配"
-}

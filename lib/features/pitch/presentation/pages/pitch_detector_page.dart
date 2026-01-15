@@ -3,7 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:pure_pitch/core/localization/generated/l10n.dart';
+import 'package:pure_pitch/core/extensions/context_extension.dart';
 import 'package:talker_flutter/talker_flutter.dart';
 
 import 'package:pure_pitch/core/logger/talker.dart';
@@ -77,12 +77,12 @@ class _PitchDetectorPageState extends ConsumerState<PitchDetectorPage>
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(S.of(context).appTitle),
+        title: Text(context.l10n.appTitle),
         actions: [
           IconButton(
             onPressed: () => ref.read(pitchProvider.notifier).analyzeFile(),
             icon: const Icon(Icons.add_circle_outline),
-            tooltip: S.of(context).analyzeAudioFile,
+            tooltip: context.l10n.analyzeAudioFile,
           ),
         ],
       ),
@@ -99,7 +99,7 @@ class _PitchDetectorPageState extends ConsumerState<PitchDetectorPage>
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   Text(
-                    S.of(context).appTitle,
+                    context.l10n.appTitle,
                     style: const TextStyle(
                       color: Colors.black,
                       fontSize: 24,
@@ -108,7 +108,7 @@ class _PitchDetectorPageState extends ConsumerState<PitchDetectorPage>
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    S.of(context).toolsAndHistory,
+                    context.l10n.toolsAndHistory,
                     style: const TextStyle(color: Colors.black87),
                   ),
                 ],
@@ -116,7 +116,7 @@ class _PitchDetectorPageState extends ConsumerState<PitchDetectorPage>
             ),
             ListTile(
               leading: const Icon(Icons.history),
-              title: Text(S.of(context).savedSessions),
+              title: Text(context.l10n.savedSessions),
               onTap: () {
                 Navigator.pop(context); // Close drawer
                 Navigator.of(context).push(
@@ -126,7 +126,7 @@ class _PitchDetectorPageState extends ConsumerState<PitchDetectorPage>
             ),
             ListTile(
               leading: const Icon(Icons.bug_report),
-              title: Text(S.of(context).viewLogs),
+              title: Text(context.l10n.viewLogs),
               onTap: () {
                 Navigator.pop(context); // Close drawer
                 Navigator.of(context).push(
@@ -220,7 +220,7 @@ class _PitchDetectorPageState extends ConsumerState<PitchDetectorPage>
                       _ControlChip(
                         onPressed: () => ref.read(pitchProvider.notifier).toggleAccompaniment(!pitchState.isAccompanimentEnabled),
                         icon: Icons.library_music,
-                        label: S.of(context).accompanimentLabel,
+                        label: context.l10n.accompanimentLabel,
                         isActive: pitchState.isAccompanimentEnabled,
                       ),
                   ],
@@ -235,7 +235,7 @@ class _PitchDetectorPageState extends ConsumerState<PitchDetectorPage>
                       const CircularProgressIndicator(color: Colors.cyanAccent),
                       const SizedBox(height: 10),
                       Text(
-                        S.of(context).analyzingAudio,
+                        context.l10n.analyzingAudio,
                         style: const TextStyle(color: Colors.cyanAccent),
                       ),
                     ],
@@ -285,7 +285,7 @@ class _PitchDetectorPageState extends ConsumerState<PitchDetectorPage>
                         child: Column(
                           children: [
                             Text(
-                              S.of(context).hz(currentPitch.hz.toStringAsFixed(1)),
+                              context.l10n.hz(currentPitch.hz.toStringAsFixed(1)),
                               style: Theme.of(context).textTheme.displayMedium
                                   ?.copyWith(
                                     fontWeight: FontWeight.bold,
@@ -293,7 +293,7 @@ class _PitchDetectorPageState extends ConsumerState<PitchDetectorPage>
                                   ),
                             ),
                             Text(
-                              S.of(context).midi(currentPitch.midiNote),
+                              context.l10n.midi(currentPitch.midiNote),
                               style: Theme.of(context).textTheme.titleLarge
                                   ?.copyWith(color: Colors.white),
                             ),
@@ -303,7 +303,7 @@ class _PitchDetectorPageState extends ConsumerState<PitchDetectorPage>
                     ] else if (!isRecording) ...[
                       const SizedBox(height: 100),
                       Text(
-                        S.of(context).readyToRecord,
+                        context.l10n.readyToRecord,
                         style: const TextStyle(
                           fontSize: 24,
                           color: Colors.white54,

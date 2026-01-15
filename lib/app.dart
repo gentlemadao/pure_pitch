@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:pure_pitch/core/extensions/context_extension.dart';
 import 'package:pure_pitch/core/localization/generated/l10n.dart';
 import 'package:pure_pitch/core/router/router.dart';
 import 'package:pure_pitch/core/theme/app_theme.dart';
@@ -17,7 +18,7 @@ class App extends ConsumerWidget {
     final router = ref.watch(goRouterProvider);
     final locale = ref.watch(appLocaleProvider);
     return MaterialApp.router(
-      onGenerateTitle: (context) => S.of(context).appTitle,
+      onGenerateTitle: (context) => context.l10n.appTitle,
       theme: AppTheme.darkTheme,
       routerConfig: router,
       locale: locale,

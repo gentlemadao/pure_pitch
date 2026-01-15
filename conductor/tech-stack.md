@@ -19,7 +19,7 @@
 *   **State Management**: `riverpod` & `riverpod_generator` - strictly using code generation for type safety.
 *   **Routing**: `go_router` & `go_router_builder` - Declarative routing with code generation.
 *   **Data Modeling**: `freezed` & `json_serializable` - Immutable data classes (mandatory `abstract class` or `sealed class`).
-*   **Localization**: `intl` - Mandatory for all UI strings (ARB based).
+*   **Localization**: `intl`, `intl_utils`, `flutter_localizations` - Mandatory for all UI strings (ARB based).
 *   **Local Storage**:
     *   Key-Value: `shared_preferences` (via StorageService).
     *   Database: `drift` (via AppDatabase) - Type-safe relational persistence.

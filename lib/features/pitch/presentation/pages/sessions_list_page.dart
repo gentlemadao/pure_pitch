@@ -3,7 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:pure_pitch/core/localization/generated/l10n.dart';
+import 'package:pure_pitch/core/extensions/context_extension.dart';
 
 import '../../../../core/database/app_database.dart' as db;
 import '../../data/repositories/session_repository.dart';
@@ -24,13 +24,13 @@ class SessionsListPage extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(S.of(context).savedSessions),
+        title: Text(context.l10n.savedSessions),
       ),
       body: sessionsAsync.when(
         data: (List<db.Session> sessions) {
           if (sessions.isEmpty) {
             return Center(
-              child: Text(S.of(context).noSavedSessions, style: const TextStyle(color: Colors.white54)),
+              child: Text(context.l10n.noSavedSessions, style: const TextStyle(color: Colors.white54)),
             );
           }
           return ListView.builder(
@@ -47,7 +47,7 @@ class SessionsListPage extends ConsumerWidget {
                     children: [
                       const Icon(Icons.library_music, color: Colors.white),
                       const SizedBox(width: 10),
-                      Text(S.of(context).importAccompaniment, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                      Text(context.l10n.importAccompaniment, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
                     ],
                   ),
                 ),
@@ -87,17 +87,17 @@ class SessionsListPage extends ConsumerWidget {
                     final confirmed = await showDialog<bool>(
                       context: context,
                       builder: (context) => AlertDialog(
-                        title: Text(S.of(context).deleteSession),
-                        content: Text(S.of(context).deleteSessionConfirmation),
+                        title: Text(context.l10n.deleteSession),
+                        content: Text(context.l10n.deleteSessionConfirmation),
                         actions: [
                           TextButton(
                             onPressed: () => Navigator.pop(context, false),
-                            child: Text(S.of(context).cancel),
+                            child: Text(context.l10n.cancel),
                           ),
                           TextButton(
                             onPressed: () => Navigator.pop(context, true),
                             style: TextButton.styleFrom(foregroundColor: Colors.redAccent),
-                            child: Text(S.of(context).delete),
+                            child: Text(context.l10n.delete),
                           ),
                         ],
                       ),
@@ -146,7 +146,7 @@ class SessionsListPage extends ConsumerWidget {
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, s) => Center(child: Text(S.of(context).error(e))),
+        error: (e, s) => Center(child: Text(context.l10n.error(e))),
       ),
     );
   }
