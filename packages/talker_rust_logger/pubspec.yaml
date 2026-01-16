@@ -1,0 +1,21 @@
+name: talker_rust_logger
+description: A bridge between Rust logs and Talker, strongly typed for flutter_rust_bridge.
+version: 0.1.0
+publish_to: 'none'
+
+environment:
+  sdk: ^3.6.2
+  flutter: ">=3.27.4"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_rust_bridge: ">=2.11.1"
+  talker: ^5.1.10
+  talker_flutter: ^5.1.10
+
+dev_dependencies:
+  flutter_lints: ^5.0.0
+
+executables:
+  setup_logger:

@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pure_pitch/app.dart';
 import 'package:pure_pitch/core/logger/talker.dart';
+import 'package:pure_pitch/core/logger/rust_logger.dart';
 import 'package:pure_pitch/src/rust/api/pitch.dart';
 import 'package:pure_pitch/src/rust/frb_generated.dart';
 import 'package:talker_riverpod_logger/talker_riverpod_logger.dart';
@@ -28,13 +29,12 @@ Future<void> bootstrap() async {
 
   final prefs = await SharedPreferences.getInstance();
   await RustLib.init();
+  await initRustLogging();
   await initOrt();
 
   runApp(
     ProviderScope(
-      overrides: [
-        sharedPreferencesProvider.overrideWithValue(prefs),
-      ],
+      overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
       observers: [
         TalkerRiverpodObserver(
           talker: talker,

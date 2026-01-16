@@ -3,4 +3,5 @@
 pub(crate) mod basic_pitch_postproc;
 pub(crate) mod dsp;
 pub mod pitch;
-pub mod aec;
+pub(crate) mod aec;
+pub mod logging;

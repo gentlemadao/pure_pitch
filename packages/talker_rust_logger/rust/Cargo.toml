@@ -1,0 +1,14 @@
+[package]
+name = "talker_rust_logger"
+version = "0.1.0"
+edition = "2021"
+description = "A bridge to forward Rust logs (log crate) to Flutter's Talker logger via StreamSink."
+license = "MIT OR Apache-2.0"
+keywords = ["flutter", "log", "talker", "mobile"]
+categories = ["development-tools::debugging"]
+readme = "README.md"
+
+[dependencies]
+log = "0.4"
+chrono = "0.4"
+once_cell = "1.18"

@@ -36,6 +36,8 @@ dependencies:
   just_audio: ^0.10.5
   shared_preferences: ^2.5.4
   audio_session: ^0.2.2
+  talker_rust_logger:
+    path: packages/talker_rust_logger
 
 dev_dependencies:
   flutter_test:

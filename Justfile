@@ -26,9 +26,17 @@ rust-build:
 rust-test:
     cd rust && cargo test
 
+# Check Dart code formatting (fails if formatting is needed)
+format-check:
+    dart format --output=none --set-exit-if-changed lib test integration_test packages
+
+# Format all Dart code
+format:
+    dart format lib test integration_test packages
+
 # Download external dynamic libraries (ONNX Runtime)
 setup-libs:
     ./scripts/download_libs.sh
 
-# Perform a full check: localization, code generation, analysis, and tests
-check: l10n build analyze rust-test
+# Perform a full check: localization, code generation, formatting, analysis, and tests
+check: l10n build format-check analyze rust-test

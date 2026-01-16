@@ -11,6 +11,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:clock/clock.dart';
 import 'package:path/path.dart' as p;
 import 'package:just_audio/just_audio.dart';
+import 'package:audio_session/audio_session.dart';
 
 import 'package:pure_pitch/core/logger/talker.dart';
 import 'package:pure_pitch/core/utils/asset_loader.dart';
@@ -18,7 +19,7 @@ import 'package:pure_pitch/features/pitch/data/repositories/session_repository.d
 import 'package:pure_pitch/features/pitch/domain/models/pitch_state.dart';
 import 'package:pure_pitch/features/pitch/domain/services/pitch_detector_service.dart';
 import 'package:pure_pitch/features/pitch/domain/utils/pitch_smoother.dart';
-import 'package:pure_pitch/src/rust/api/pitch.dart';
+import 'package:pure_pitch/src/rust/api/pitch.dart' as rust;
 
 part 'pitch_provider.g.dart';
 
@@ -28,21 +29,81 @@ class Pitch extends _$Pitch {
   AudioPlayer? _audioPlayer;
   AudioPlayer? _accompanimentPlayer;
   StreamSubscription? _sub;
+  StreamSubscription<Set<AudioDevice>>? _sessionSub;
   Timer? _refinementTimer;
   static const int _sampleRate = 44100;
   late final PitchSmoother _smoother;
 
   @override
   PitchState build() {
+    // Keep the service alive to avoid repeated initialization logs during audio processing
+    ref.watch(pitchDetectorServiceProvider);
+
     _smoother = PitchSmoother();
+    _initAudioSession();
     ref.onDispose(() {
       _sub?.cancel();
+      _sessionSub?.cancel();
       _refinementTimer?.cancel();
       _recorder?.dispose();
       _audioPlayer?.dispose();
       _accompanimentPlayer?.dispose();
     });
     return const PitchState();
+  }
+
+  Future<void> _initAudioSession() async {
+    final session = await AudioSession.instance;
+    await session.configure(
+      AudioSessionConfiguration(
+        avAudioSessionCategory: AVAudioSessionCategory.playAndRecord,
+        avAudioSessionCategoryOptions:
+            AVAudioSessionCategoryOptions.allowBluetooth |
+            AVAudioSessionCategoryOptions.defaultToSpeaker |
+            AVAudioSessionCategoryOptions.mixWithOthers,
+        avAudioSessionMode:
+            AVAudioSessionMode.measurement, // Cleanest path for raw analysis
+        avAudioSessionRouteSharingPolicy:
+            AVAudioSessionRouteSharingPolicy.defaultPolicy,
+        androidAudioAttributes: const AndroidAudioAttributes(
+          contentType: AndroidAudioContentType.music,
+          usage:
+              AndroidAudioUsage.media, // High-quality media, not communication
+        ),
+        androidAudioFocusGainType: AndroidAudioFocusGainType.gain,
+        androidWillPauseWhenDucked: true,
+      ),
+    ); // Initial check
+    _updateAecStatus(await session.getDevices());
+
+    // Listen for changes
+    _sessionSub = session.devicesStream.listen((devices) {
+      if (ref.mounted) {
+        _updateAecStatus(devices);
+      }
+    });
+  }
+
+  void _updateAecStatus(Set<AudioDevice> devices) {
+    if (!ref.mounted) return;
+    bool hasHeadphones = false;
+    for (final device in devices) {
+      if (device.type == AudioDeviceType.wiredHeadphones ||
+          device.type == AudioDeviceType.wiredHeadset ||
+          device.type == AudioDeviceType.bluetoothA2dp ||
+          device.type == AudioDeviceType.bluetoothLe ||
+          device.type == AudioDeviceType.bluetoothSco) {
+        hasHeadphones = true;
+        break;
+      }
+    }
+
+    // Default: AEC ON if NO headphones, OFF if headphones.
+    state = state.copyWith(isAecEnabled: !hasHeadphones);
+  }
+
+  void toggleAec(bool enabled) {
+    state = state.copyWith(isAecEnabled: enabled);
   }
 
   AudioPlayer get _player {
@@ -100,7 +161,7 @@ class Pitch extends _$Pitch {
 
       // 2. Run Inference
       final modelPath = await AssetLoader.loadModelPath('basic_pitch.onnx');
-      final noteEvents = await analyzeAudioFile(
+      final noteEvents = await rust.analyzeAudioFile(
         audioPath: audioPath,
         modelPath: modelPath,
       );
@@ -128,6 +189,7 @@ class Pitch extends _$Pitch {
           analysisResults: noteEvents,
           currentFilePath: audioPath,
         );
+        _loadPlaybackFiles();
       }
     } catch (e) {
       if (ref.mounted) {
@@ -152,16 +214,58 @@ class Pitch extends _$Pitch {
 
     if (hasPermission) {
       try {
+        state = state.copyWith(
+          isRecording: true,
+          history: [],
+          errorMessage: null,
+        );
+
+        // 1. Ensure AudioSession is active
+        final session = await AudioSession.instance;
+        await session.setActive(true);
+
+        // 2. Initialize Rust AEC (Universal Software solution for all 5 platforms)
+        if (state.isAecEnabled && !kIsWeb) {
+          final List<String> referencePaths = [];
+          if (state.isAccompanimentEnabled && state.accompanimentPath != null) {
+            referencePaths.add(state.accompanimentPath!);
+          }
+          if (state.monitoringVolume > 0 && state.currentFilePath != null) {
+            referencePaths.add(state.currentFilePath!);
+          }
+
+          if (referencePaths.isNotEmpty) {
+            await rust.aecInit(
+              sampleRate: _sampleRate,
+              numChannels: 1,
+              referencePaths: referencePaths,
+            );
+          }
+        }
+
+        // 3. Start the recording stream
+        talker.info('Starting recorder stream (Raw High-Fidelity)...');
         final stream = await _recorder!.startStream(
-          const RecordConfig(
+          RecordConfig(
             encoder: AudioEncoder.pcm16bits,
             sampleRate: _sampleRate,
             numChannels: 1,
+            // Use Raw MIC source for best quality analysis
+            androidConfig: const AndroidRecordConfig(
+              audioSource: AndroidAudioSource.mic,
+            ),
+            // Disable all OS processing, we handle it in Rust
+            echoCancel: false,
+            noiseSuppress: false,
+            autoGain: false,
           ),
         );
 
         _sub = stream.listen(processAudioChunk);
         _startRefinementTimer();
+
+        // 4. Wait for stream stability, then start playback
+        await Future.delayed(const Duration(milliseconds: 500));
 
         if (state.monitoringVolume > 0) {
           _playOriginalAudio();
@@ -169,14 +273,12 @@ class Pitch extends _$Pitch {
         if (state.isAccompanimentEnabled) {
           _playAccompaniment();
         }
-
-        state = state.copyWith(
-          isRecording: true,
-          history: [],
-          errorMessage: null,
-        );
       } catch (e) {
-        state = state.copyWith(errorMessage: "Failed to start capture: $e");
+        talker.error('Failed to start capture', e);
+        state = state.copyWith(
+          isRecording: false,
+          errorMessage: "Failed to start capture: $e",
+        );
       }
     } else {
       state = state.copyWith(
@@ -193,6 +295,7 @@ class Pitch extends _$Pitch {
       _stopRefinementTimer();
       _stopOriginalAudio();
       _stopAccompaniment();
+      await rust.aecReset();
       // Final refinement
       _refineHistory();
     } catch (e) {
@@ -273,21 +376,29 @@ class Pitch extends _$Pitch {
   }
 
   Future<void> updateAccompanimentPath(String path) async {
-    final session = await ref.read(sessionRepositoryProvider).findSessionByFile(
-      fileName: p.basename(state.currentFilePath ?? ''),
-      fileSize: state.currentFilePath != null ? await File(state.currentFilePath!).length() : 0,
-    );
+    final session = await ref
+        .read(sessionRepositoryProvider)
+        .findSessionByFile(
+          fileName: p.basename(state.currentFilePath ?? ''),
+          fileSize: state.currentFilePath != null
+              ? await File(state.currentFilePath!).length()
+              : 0,
+        );
 
     if (session != null) {
-      await ref.read(sessionRepositoryProvider).saveSession(
-        filePath: session.session.filePath,
-        fileName: session.session.fileName,
-        fileSize: session.session.fileSize,
-        durationSeconds: session.session.durationSeconds,
-        noteEvents: session.events,
-        accompanimentPath: path,
-      );
+      await ref
+          .read(sessionRepositoryProvider)
+          .saveSession(
+            filePath: session.session.filePath,
+            fileName: session.session.fileName,
+            fileSize: session.session.fileSize,
+            durationSeconds: session.session.durationSeconds,
+            noteEvents: session.events,
+            accompanimentPath: path,
+          );
       state = state.copyWith(accompanimentPath: path);
+      // Pre-load the new accompaniment
+      _loadPlaybackFiles();
     }
   }
 
@@ -300,14 +411,34 @@ class Pitch extends _$Pitch {
       history: [],
       currentPitch: null,
     );
+    // Pre-load hardware codecs
+    _loadPlaybackFiles();
+  }
+
+  /// Pre-load files into AudioPlayers to avoid startup latency
+  Future<void> _loadPlaybackFiles() async {
+    try {
+      if (state.currentFilePath != null) {
+        await _player.setFilePath(state.currentFilePath!, preload: true);
+      }
+      if (state.accompanimentPath != null) {
+        await _accPlayer.setFilePath(state.accompanimentPath!, preload: true);
+      }
+
+      // Do NOT init AEC here to save resources until recording starts
+    } catch (e) {
+      talker.error('Failed to pre-load audio files', e);
+    }
   }
 
   Future<void> _playOriginalAudio() async {
     if (state.currentFilePath != null) {
       try {
-        await _player.setFilePath(state.currentFilePath!);
+        talker.info('Starting original vocal playback...');
         await _player.setVolume(state.monitoringVolume);
-        await _player.play();
+        // Ensure we are at start
+        await _player.seek(Duration.zero);
+        _player.play();
       } catch (e) {
         talker.error('Failed to play original audio', e);
       }
@@ -317,8 +448,9 @@ class Pitch extends _$Pitch {
   Future<void> _playAccompaniment() async {
     if (state.accompanimentPath != null) {
       try {
-        await _accPlayer.setFilePath(state.accompanimentPath!);
-        await _accPlayer.play();
+        talker.info('Starting accompaniment playback...');
+        await _accPlayer.seek(Duration.zero);
+        _accPlayer.play();
       } catch (e) {
         talker.error('Failed to play accompaniment', e);
       }
@@ -340,7 +472,6 @@ class Pitch extends _$Pitch {
     final length = bytes.length;
     final numSamples = length ~/ 2;
     final samples = Float32List(numSamples);
-
     final byteData = ByteData.sublistView(bytes);
 
     for (int i = 0; i < numSamples; i++) {
@@ -355,10 +486,9 @@ class Pitch extends _$Pitch {
   Future<void> analyze(Float32List buffer) async {
     if (!ref.mounted) return;
     try {
-      final result = await ref.read(pitchDetectorServiceProvider).detectLive(
-            samples: buffer,
-            sampleRate: _sampleRate.toDouble(),
-          );
+      final result = await ref
+          .read(pitchDetectorServiceProvider)
+          .detectLive(samples: buffer, sampleRate: _sampleRate.toDouble());
 
       if (!ref.mounted) return;
 
@@ -373,14 +503,19 @@ class Pitch extends _$Pitch {
         clarity: result.clarity,
       );
 
-      final newHistory = [
-        ...state.history,
-        newPoint,
-      ];
+      final newHistory = [...state.history, newPoint];
 
-      LivePitch? newCurrentPitch = state.currentPitch;
-      if (result.clarity > 0.4) {
-        newCurrentPitch = LivePitch(
+      // Prune history to keep only last 60 seconds (prevent UI lag)
+      // Assuming 25 points per second
+      if (newHistory.length > 1500) {
+        newHistory.removeRange(0, newHistory.length - 1500);
+      }
+
+      rust.LivePitch? newCurrentPitch = state.currentPitch;
+      // Lower threshold if vocals are playing to allow noisy signals
+      final threshold = state.monitoringVolume > 0 ? 0.25 : 0.4;
+      if (result.clarity > threshold) {
+        newCurrentPitch = rust.LivePitch(
           hz: smoothed.hz,
           midiNote: smoothed.midiNote,
           clarity: result.clarity,
@@ -391,8 +526,8 @@ class Pitch extends _$Pitch {
         history: newHistory,
         currentPitch: newCurrentPitch,
       );
-    } catch (e) {
-      // Avoid excessive error logging in high-frequency loop
+    } catch (e, s) {
+      talker.error('Real-time pitch detection failed', e, s);
     }
   }
 }
