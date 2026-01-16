@@ -21,7 +21,8 @@ class Sessions extends Table {
 
 class NoteEvents extends Table {
   IntColumn get id => integer().autoIncrement()();
-  IntColumn get sessionId => integer().references(Sessions, #id, onDelete: KeyAction.cascade)();
+  IntColumn get sessionId =>
+      integer().references(Sessions, #id, onDelete: KeyAction.cascade)();
   RealColumn get startTime => real()();
   RealColumn get duration => real()();
   IntColumn get midiNote => integer()();

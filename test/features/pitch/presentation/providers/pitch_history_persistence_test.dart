@@ -12,49 +12,57 @@ import 'dart:typed_data';
 class MockPitchDetectorService extends Mock implements PitchDetectorService {}
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
   setUpAll(() {
     registerFallbackValue(Float32List(0));
   });
 
-  test('history should persist all data during session (no 6s cutoff)', () async {
-    final mockService = MockPitchDetectorService();
+  test(
+    'history should persist all data during session (no 6s cutoff)',
+    () async {
+      final mockService = MockPitchDetectorService();
 
-    when(() => mockService.detectLive(
+      when(
+        () => mockService.detectLive(
           samples: any(named: 'samples'),
           sampleRate: any(named: 'sampleRate'),
-        )).thenAnswer((_) async => const LivePitch(
-          hz: 440.0,
-          midiNote: 69,
-          clarity: 0.9,
-        ));
+        ),
+      ).thenAnswer(
+        (_) async => const LivePitch(hz: 440.0, midiNote: 69, clarity: 0.9),
+      );
 
-    final container = ProviderContainer(
-      overrides: [
-        pitchDetectorServiceProvider.overrideWithValue(mockService),
-      ],
-    );
-    addTearDown(container.dispose);
+      final container = ProviderContainer(
+        overrides: [
+          pitchDetectorServiceProvider.overrideWithValue(mockService),
+        ],
+      );
+      addTearDown(container.dispose);
 
-    final notifier = container.read(pitchProvider.notifier);
-    final dummySamples = Float32List(512);
+      final notifier = container.read(pitchProvider.notifier);
+      final dummySamples = Float32List(512);
 
-    final startTime = DateTime(2026, 1, 1, 12, 0, 0);
+      final startTime = DateTime(2026, 1, 1, 12, 0, 0);
 
-    await withClock(Clock.fixed(startTime), () async {
-      // 1. Add data at t=0
-      await notifier.analyze(dummySamples);
-      expect(container.read(pitchProvider).history.length, 1);
-    });
+      await withClock(Clock.fixed(startTime), () async {
+        // 1. Add data at t=0
+        await notifier.analyze(dummySamples);
+        expect(container.read(pitchProvider).history.length, 1);
+      });
 
-    final laterTime = startTime.add(const Duration(seconds: 10));
-    await withClock(Clock.fixed(laterTime), () async {
-      // 2. Add data at t=10
-      await notifier.analyze(dummySamples);
+      final laterTime = startTime.add(const Duration(seconds: 10));
+      await withClock(Clock.fixed(laterTime), () async {
+        // 2. Add data at t=10
+        await notifier.analyze(dummySamples);
 
-      // 3. Verify persistence
-      final history = container.read(pitchProvider).history;
-      expect(history.length, 2,
-          reason: 'History should keep data beyond 6 seconds');
-    });
-  });
+        // 3. Verify persistence
+        final history = container.read(pitchProvider).history;
+        expect(
+          history.length,
+          2,
+          reason: 'History should keep data beyond 6 seconds',
+        );
+      });
+    },
+  );
 }

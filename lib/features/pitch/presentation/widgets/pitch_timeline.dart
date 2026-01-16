@@ -33,10 +33,7 @@ class _TimelinePainter extends CustomPainter {
   final double pixelsPerSecond;
   final double scrollOffset;
 
-  _TimelinePainter({
-    required this.pixelsPerSecond,
-    required this.scrollOffset,
-  });
+  _TimelinePainter({required this.pixelsPerSecond, required this.scrollOffset});
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -47,37 +44,30 @@ class _TimelinePainter extends CustomPainter {
     const double tickHeight = 5.0;
     const double majorTickHeight = 10.0;
 
-    // We only need to draw what's visible. 
+    // We only need to draw what's visible.
     // pixelsPerSecond is correct. size.width is totalWidth.
-    
+
     final double durationSeconds = size.width / pixelsPerSecond;
 
     for (int i = 0; i <= durationSeconds.ceil(); i++) {
       final x = i * pixelsPerSecond;
-      
+
       // Draw major tick every second
-      canvas.drawLine(
-        Offset(x, 0),
-        Offset(x, majorTickHeight),
-        paint,
-      );
+      canvas.drawLine(Offset(x, 0), Offset(x, majorTickHeight), paint);
 
       // Draw sub-ticks (0.5s)
       final midX = x + (pixelsPerSecond / 2);
       if (midX < size.width) {
-         canvas.drawLine(
-           Offset(midX, 0),
-           Offset(midX, tickHeight),
-           paint,
-         );
+        canvas.drawLine(Offset(midX, 0), Offset(midX, tickHeight), paint);
       }
 
       // Draw label every 5 seconds
       if (i % 5 == 0) {
         final minutes = i ~/ 60;
         final seconds = i % 60;
-        final timeStr = '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
-        
+        final timeStr =
+            '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
+
         final textPainter = TextPainter(
           text: TextSpan(
             text: timeStr,
@@ -85,11 +75,14 @@ class _TimelinePainter extends CustomPainter {
           ),
           textDirection: TextDirection.ltr,
         )..layout();
-        
-        textPainter.paint(canvas, Offset(x - (textPainter.width / 2), majorTickHeight + 2));
+
+        textPainter.paint(
+          canvas,
+          Offset(x - (textPainter.width / 2), majorTickHeight + 2),
+        );
       }
     }
-    
+
     // Draw top border
     canvas.drawLine(const Offset(0, 0), Offset(size.width, 0), paint);
   }

@@ -91,9 +91,7 @@ class _PitchDetectorPageState extends ConsumerState<PitchDetectorPage>
           padding: EdgeInsets.zero,
           children: [
             DrawerHeader(
-              decoration: const BoxDecoration(
-                color: Colors.cyanAccent,
-              ),
+              decoration: const BoxDecoration(color: Colors.cyanAccent),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.end,
@@ -120,7 +118,9 @@ class _PitchDetectorPageState extends ConsumerState<PitchDetectorPage>
               onTap: () {
                 Navigator.pop(context); // Close drawer
                 Navigator.of(context).push(
-                  MaterialPageRoute(builder: (context) => const SessionsListPage()),
+                  MaterialPageRoute(
+                    builder: (context) => const SessionsListPage(),
+                  ),
                 );
               },
             ),
@@ -137,6 +137,24 @@ class _PitchDetectorPageState extends ConsumerState<PitchDetectorPage>
               },
             ),
             const Divider(),
+            const Padding(
+              padding: EdgeInsets.only(left: 16, top: 8),
+              child: Text(
+                'Settings',
+                style: TextStyle(color: Colors.white38, fontSize: 12),
+              ),
+            ),
+            SwitchListTile(
+              title: const Text(
+                'Echo Cancellation',
+                style: TextStyle(color: Colors.white),
+              ),
+              value: pitchState.isAecEnabled,
+              onChanged: (value) =>
+                  ref.read(pitchProvider.notifier).toggleAec(value),
+              secondary: const Icon(Icons.eco, color: Colors.white70),
+            ),
+            const Divider(),
             ListTile(
               leading: const Icon(Icons.language),
               title: const Text('Language / 语言'),
@@ -148,7 +166,9 @@ class _PitchDetectorPageState extends ConsumerState<PitchDetectorPage>
                 ],
                 onChanged: (value) {
                   if (value != null) {
-                    ref.read(appLocaleProvider.notifier).setLocale(Locale(value));
+                    ref
+                        .read(appLocaleProvider.notifier)
+                        .setLocale(Locale(value));
                     Navigator.pop(context);
                   }
                 },
@@ -207,10 +227,14 @@ class _PitchDetectorPageState extends ConsumerState<PitchDetectorPage>
                   children: [
                     // Volume Cycle Button
                     _ControlChip(
-                      onPressed: () => ref.read(pitchProvider.notifier).cycleMonitoringVolume(),
+                      onPressed: () => ref
+                          .read(pitchProvider.notifier)
+                          .cycleMonitoringVolume(),
                       icon: pitchState.monitoringVolume == 0
                           ? Icons.volume_off
-                          : (pitchState.monitoringVolume < 0.5 ? Icons.volume_down : Icons.volume_up),
+                          : (pitchState.monitoringVolume < 0.5
+                                ? Icons.volume_down
+                                : Icons.volume_up),
                       label: '${(pitchState.monitoringVolume * 100).toInt()}%',
                       isActive: pitchState.monitoringVolume > 0,
                     ),
@@ -218,11 +242,27 @@ class _PitchDetectorPageState extends ConsumerState<PitchDetectorPage>
                     // Accompaniment Toggle
                     if (pitchState.accompanimentPath != null)
                       _ControlChip(
-                        onPressed: () => ref.read(pitchProvider.notifier).toggleAccompaniment(!pitchState.isAccompanimentEnabled),
+                        onPressed: () => ref
+                            .read(pitchProvider.notifier)
+                            .toggleAccompaniment(
+                              !pitchState.isAccompanimentEnabled,
+                            ),
                         icon: Icons.library_music,
                         label: context.l10n.accompanimentLabel,
                         isActive: pitchState.isAccompanimentEnabled,
                       ),
+                    const SizedBox(width: 10),
+                    // AEC Toggle
+                    _ControlChip(
+                      onPressed: () => ref
+                          .read(pitchProvider.notifier)
+                          .toggleAec(!pitchState.isAecEnabled),
+                      icon: pitchState.isAecEnabled
+                          ? Icons.eco
+                          : Icons.eco_outlined,
+                      label: 'AEC',
+                      isActive: pitchState.isAecEnabled,
+                    ),
                   ],
                 ),
               ),
@@ -255,7 +295,7 @@ class _PitchDetectorPageState extends ConsumerState<PitchDetectorPage>
                         color: Colors.redAccent.withValues(alpha: 0.8),
                         borderRadius: BorderRadius.circular(12),
                         boxShadow: const [
-                          BoxShadow(color: Colors.black26, blurRadius: 10)
+                          BoxShadow(color: Colors.black26, blurRadius: 10),
                         ],
                       ),
                       child: Text(
@@ -285,7 +325,9 @@ class _PitchDetectorPageState extends ConsumerState<PitchDetectorPage>
                         child: Column(
                           children: [
                             Text(
-                              context.l10n.hz(currentPitch.hz.toStringAsFixed(1)),
+                              context.l10n.hz(
+                                currentPitch.hz.toStringAsFixed(1),
+                              ),
                               style: Theme.of(context).textTheme.displayMedium
                                   ?.copyWith(
                                     fontWeight: FontWeight.bold,
@@ -396,7 +438,9 @@ class _ControlChip extends StatelessWidget {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
-          color: isActive ? Colors.cyanAccent.withValues(alpha: 0.2) : Colors.white10,
+          color: isActive
+              ? Colors.cyanAccent.withValues(alpha: 0.2)
+              : Colors.white10,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
             color: isActive ? Colors.cyanAccent : Colors.white24,

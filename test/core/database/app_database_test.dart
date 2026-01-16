@@ -30,9 +30,9 @@ void main() {
       final id = await database.into(database.sessions).insert(session);
       expect(id, isPositive);
 
-      final retrievedSession = await (database.select(database.sessions)
-            ..where((tbl) => tbl.id.equals(id)))
-          .getSingle();
+      final retrievedSession = await (database.select(
+        database.sessions,
+      )..where((tbl) => tbl.id.equals(id))).getSingle();
 
       expect(retrievedSession.fileName, equals('audio.mp3'));
       expect(retrievedSession.fileSize, equals(1024));
@@ -60,33 +60,48 @@ void main() {
 
       await database.into(database.noteEvents).insert(noteEvent);
 
-      final notes = await (database.select(database.noteEvents)
-            ..where((tbl) => tbl.sessionId.equals(sessionId)))
-          .get();
+      final notes = await (database.select(
+        database.noteEvents,
+      )..where((tbl) => tbl.sessionId.equals(sessionId))).get();
 
       expect(notes.length, equals(1));
       expect(notes.first.midiNote, equals(60));
     });
 
     test('should cascade delete note events when session is deleted', () async {
-       final now = DateTime.now();
-       final sessionId = await database.into(database.sessions).insert(SessionsCompanion.insert(
-         filePath: 'del.mp3',
-         fileName: 'del.mp3',
-         fileSize: 100,
-         durationSeconds: 10,
-         createdAt: now,
-       ));
-       
-       await database.into(database.noteEvents).insert(NoteEventsCompanion.insert(
-         sessionId: sessionId,
-         startTime: 1, duration: 1, midiNote: 60, confidence: 1.0
-       ));
-       
-       await (database.delete(database.sessions)..where((t) => t.id.equals(sessionId))).go();
-       
-       final notes = await (database.select(database.noteEvents)..where((t) => t.sessionId.equals(sessionId))).get();
-       expect(notes, isEmpty);
+      final now = DateTime.now();
+      final sessionId = await database
+          .into(database.sessions)
+          .insert(
+            SessionsCompanion.insert(
+              filePath: 'del.mp3',
+              fileName: 'del.mp3',
+              fileSize: 100,
+              durationSeconds: 10,
+              createdAt: now,
+            ),
+          );
+
+      await database
+          .into(database.noteEvents)
+          .insert(
+            NoteEventsCompanion.insert(
+              sessionId: sessionId,
+              startTime: 1,
+              duration: 1,
+              midiNote: 60,
+              confidence: 1.0,
+            ),
+          );
+
+      await (database.delete(
+        database.sessions,
+      )..where((t) => t.id.equals(sessionId))).go();
+
+      final notes = await (database.select(
+        database.noteEvents,
+      )..where((t) => t.sessionId.equals(sessionId))).get();
+      expect(notes, isEmpty);
     });
   });
 }

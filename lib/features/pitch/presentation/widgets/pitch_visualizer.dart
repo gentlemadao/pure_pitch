@@ -67,7 +67,7 @@ class _PitchVisualizerState extends State<PitchVisualizer> {
         // Calculate total width
         double totalWidth = constraints.maxWidth;
         final DateTime now = clock.now();
-        
+
         double recordingX = 0;
         bool hasRecording = widget.history.isNotEmpty;
 
@@ -91,7 +91,10 @@ class _PitchVisualizerState extends State<PitchVisualizer> {
           WidgetsBinding.instance.addPostFrameCallback((_) {
             if (_scrollController.hasClients && widget.isRecording) {
               // Keep the playhead at the right edge of the screen
-              final targetOffset = max(0.0, recordingX - (constraints.maxWidth - 50));
+              final targetOffset = max(
+                0.0,
+                recordingX - (constraints.maxWidth - 50),
+              );
               _scrollController.jumpTo(targetOffset);
             }
           });
@@ -112,7 +115,8 @@ class _PitchVisualizerState extends State<PitchVisualizer> {
                         child: CustomPaint(
                           size: Size(
                             max(totalWidth, constraints.maxWidth),
-                            constraints.maxHeight - 30, // Leave space for timeline
+                            constraints.maxHeight -
+                                30, // Leave space for timeline
                           ),
                           painter: _PitchPainter(
                             history: widget.history,
@@ -131,7 +135,8 @@ class _PitchVisualizerState extends State<PitchVisualizer> {
                       PitchTimeline(
                         pixelsPerSecond: pixelsPerSecond,
                         totalWidth: max(totalWidth, constraints.maxWidth),
-                        scrollOffset: 0, // Since it's inside the scrollview, we don't need offset for internal painting
+                        scrollOffset:
+                            0, // Since it's inside the scrollview, we don't need offset for internal painting
                       ),
                     ],
                   ),
@@ -202,7 +207,18 @@ class _PitchLabelsPainter extends CustomPainter {
 
   String _midiToNoteName(int midi) {
     final names = [
-      'C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'
+      'C',
+      'C#',
+      'D',
+      'D#',
+      'E',
+      'F',
+      'F#',
+      'G',
+      'G#',
+      'A',
+      'A#',
+      'B',
     ];
     final octave = (midi / 12).floor() - 1;
     return '${names[midi % 12]}$octave';
@@ -358,8 +374,9 @@ class _PitchPainter extends CustomPainter {
 
     for (int i = 0; i < history.length; i++) {
       final point = history[i];
-      final diffMsFromStart =
-          point.time.difference(sessionStartTime).inMilliseconds;
+      final diffMsFromStart = point.time
+          .difference(sessionStartTime)
+          .inMilliseconds;
       final x = diffMsFromStart / 1000.0 * pixelsPerSecond;
 
       final y = PitchCoordinateMapper.calculateY(
@@ -370,26 +387,42 @@ class _PitchPainter extends CustomPainter {
       );
 
       if (point.clarity < 0.4) {
-        // If it's a short gap, we could bridge it. 
+        // If it's a short gap, we could bridge it.
         // But for simplicity in path drawing, we break the main path here.
         isFirst = true;
-        
+
         // Short gap bridging: peek next point
         if (i > 0 && i < history.length - 1) {
-            final prev = history[i-1];
-            final next = history[i+1];
-            if (prev.clarity >= 0.4 && next.clarity >= 0.4) {
-                final gapMs = next.time.difference(prev.time).inMilliseconds;
-                if (gapMs < 300) {
-                   final prevX = prev.time.difference(sessionStartTime).inMilliseconds / 1000.0 * pixelsPerSecond;
-                   final prevY = PitchCoordinateMapper.calculateY(hz: prev.hz, minNote: minNote, maxNote: maxNote, height: size.height);
-                   final nextX = next.time.difference(sessionStartTime).inMilliseconds / 1000.0 * pixelsPerSecond;
-                   final nextY = PitchCoordinateMapper.calculateY(hz: next.hz, minNote: minNote, maxNote: maxNote, height: size.height);
-                   
-                   bridgePath.moveTo(prevX, prevY);
-                   bridgePath.lineTo(nextX, nextY);
-                }
+          final prev = history[i - 1];
+          final next = history[i + 1];
+          if (prev.clarity >= 0.4 && next.clarity >= 0.4) {
+            final gapMs = next.time.difference(prev.time).inMilliseconds;
+            if (gapMs < 300) {
+              final prevX =
+                  prev.time.difference(sessionStartTime).inMilliseconds /
+                  1000.0 *
+                  pixelsPerSecond;
+              final prevY = PitchCoordinateMapper.calculateY(
+                hz: prev.hz,
+                minNote: minNote,
+                maxNote: maxNote,
+                height: size.height,
+              );
+              final nextX =
+                  next.time.difference(sessionStartTime).inMilliseconds /
+                  1000.0 *
+                  pixelsPerSecond;
+              final nextY = PitchCoordinateMapper.calculateY(
+                hz: next.hz,
+                minNote: minNote,
+                maxNote: maxNote,
+                height: size.height,
+              );
+
+              bridgePath.moveTo(prevX, prevY);
+              bridgePath.lineTo(nextX, nextY);
             }
+          }
         }
         continue;
       }
@@ -415,7 +448,7 @@ class _PitchPainter extends CustomPainter {
       final playheadPaint = Paint()
         ..color = Colors.cyanAccent.withValues(alpha: 0.4)
         ..strokeWidth = 1.0;
-      
+
       // Draw playhead vertical line
       canvas.drawLine(
         Offset(playheadX, 0),
@@ -426,7 +459,7 @@ class _PitchPainter extends CustomPainter {
       // Draw cursor point (the pulsing head)
       final last = history.last;
       final headX = playheadX; // Use playhead X for the very tip
-      
+
       if (last.clarity >= 0.4) {
         final headY = PitchCoordinateMapper.calculateY(
           hz: last.hz,

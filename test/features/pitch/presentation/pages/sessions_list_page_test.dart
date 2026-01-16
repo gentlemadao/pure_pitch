@@ -13,13 +13,16 @@ import 'package:pure_pitch/core/database/app_database.dart' as db;
 class MockSessionRepository extends Mock implements SessionRepository {}
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
   late MockSessionRepository mockRepository;
 
   setUp(() {
     mockRepository = MockSessionRepository();
   });
 
-  testWidgets('SessionsListPage should show empty message when no sessions', (tester) async {
+  testWidgets('SessionsListPage should show empty message when no sessions', (
+    tester,
+  ) async {
     when(() => mockRepository.getAllSessions()).thenAnswer((_) async => []);
 
     await tester.pumpWidget(
@@ -47,16 +50,18 @@ void main() {
 
   testWidgets('SessionsListPage should list saved sessions', (tester) async {
     final now = DateTime.now();
-    when(() => mockRepository.getAllSessions()).thenAnswer((_) async => [
-      db.Session(
-        id: 1,
-        filePath: '/path/1.mp3',
-        fileName: 'Song 1.mp3',
-        fileSize: 1000,
-        durationSeconds: 120,
-        createdAt: now,
-      ),
-    ]);
+    when(() => mockRepository.getAllSessions()).thenAnswer(
+      (_) async => [
+        db.Session(
+          id: 1,
+          filePath: '/path/1.mp3',
+          fileName: 'Song 1.mp3',
+          fileSize: 1000,
+          durationSeconds: 120,
+          createdAt: now,
+        ),
+      ],
+    );
 
     await tester.pumpWidget(
       ProviderScope(

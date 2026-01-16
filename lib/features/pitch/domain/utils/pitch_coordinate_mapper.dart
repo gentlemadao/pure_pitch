@@ -23,10 +23,10 @@ class PitchCoordinateMapper {
     required double height,
   }) {
     if (hz <= 0) return height;
-    
+
     final noteRange = maxNote - minNote;
     final heightPerNote = height / noteRange;
-    
+
     final fractionalMidi = 69 + 12 * (log(hz / 440.0) / log(2));
     return height - ((fractionalMidi - minNote) * heightPerNote);
   }

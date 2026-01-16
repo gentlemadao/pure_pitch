@@ -10,51 +10,55 @@ import 'package:pure_pitch/core/localization/generated/l10n.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
 void main() {
-  setUpAll(() async {
-    // ... same ...
-  });
+  TestWidgetsFlutterBinding.ensureInitialized();
 
-  testWidgets('Zoom buttons exist and update state', (tester) async {
-    await tester.pumpWidget(
-      const ProviderScope(
-        child: MaterialApp(
-          localizationsDelegates: [
-            S.delegate,
-            GlobalMaterialLocalizations.delegate,
-            GlobalWidgetsLocalizations.delegate,
-            GlobalCupertinoLocalizations.delegate,
-          ],
-          home: PitchDetectorPage(),
+  group('PitchDetectorPage Scaling', () {
+    setUpAll(() async {
+      // ... same ...
+    });
+
+    testWidgets('Zoom buttons exist and update state', (tester) async {
+      await tester.pumpWidget(
+        const ProviderScope(
+          child: MaterialApp(
+            localizationsDelegates: [
+              S.delegate,
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            home: PitchDetectorPage(),
+          ),
         ),
-      ),
-    );
-    await tester.pumpAndSettle();
+      );
+      await tester.pumpAndSettle();
 
-    // Initial state check (might be overridden by LayoutBuilder)
-    final context = tester.element(find.byType(PitchDetectorPage));
-    final container = ProviderScope.containerOf(context);
+      // Initial state check (might be overridden by LayoutBuilder)
+      final context = tester.element(find.byType(PitchDetectorPage));
+      final container = ProviderScope.containerOf(context);
 
-    // Find zoom buttons
-    final zoomIn = find.byIcon(Icons.zoom_in);
-    final zoomOut = find.byIcon(Icons.zoom_out);
+      // Find zoom buttons
+      final zoomIn = find.byIcon(Icons.zoom_in);
+      final zoomOut = find.byIcon(Icons.zoom_out);
 
-    expect(zoomIn, findsOneWidget);
-    expect(zoomOut, findsOneWidget);
+      expect(zoomIn, findsOneWidget);
+      expect(zoomOut, findsOneWidget);
 
-    // Tap zoom out (increase time window)
-    final initialWindow = container.read(pitchProvider).visibleTimeWindow;
-    await tester.tap(zoomOut);
-    await tester.pumpAndSettle();
+      // Tap zoom out (increase time window)
+      final initialWindow = container.read(pitchProvider).visibleTimeWindow;
+      await tester.tap(zoomOut);
+      await tester.pumpAndSettle();
 
-    // Expect increase
-    expect(
-      container.read(pitchProvider).visibleTimeWindow,
-      greaterThan(initialWindow),
-    );
+      // Expect increase
+      expect(
+        container.read(pitchProvider).visibleTimeWindow,
+        greaterThan(initialWindow),
+      );
 
-    // Tap zoom in (decrease time window)
-    await tester.tap(zoomIn);
-    await tester.pumpAndSettle();
-    expect(container.read(pitchProvider).visibleTimeWindow, initialWindow);
+      // Tap zoom in (decrease time window)
+      await tester.tap(zoomIn);
+      await tester.pumpAndSettle();
+      expect(container.read(pitchProvider).visibleTimeWindow, initialWindow);
+    });
   });
 }

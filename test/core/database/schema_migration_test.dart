@@ -25,17 +25,20 @@ void main() {
         fileSize: 1024,
         durationSeconds: 120.5,
         createdAt: now,
-        accompanimentPath: const  Value('/path/to/accompaniment.mp3'),
+        accompanimentPath: const Value('/path/to/accompaniment.mp3'),
       );
 
       final id = await database.into(database.sessions).insert(session);
       expect(id, isPositive);
 
-      final retrievedSession = await (database.select(database.sessions)
-            ..where((tbl) => tbl.id.equals(id)))
-          .getSingle();
+      final retrievedSession = await (database.select(
+        database.sessions,
+      )..where((tbl) => tbl.id.equals(id))).getSingle();
 
-      expect(retrievedSession.accompanimentPath, equals('/path/to/accompaniment.mp3'));
+      expect(
+        retrievedSession.accompanimentPath,
+        equals('/path/to/accompaniment.mp3'),
+      );
     });
   });
 }

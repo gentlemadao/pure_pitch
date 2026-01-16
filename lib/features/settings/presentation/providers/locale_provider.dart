@@ -16,17 +16,17 @@ class AppLocale extends _$AppLocale {
     if (savedCode != null) {
       return Locale(savedCode);
     }
-    
+
     // Default to system locale if supported, otherwise English
     final systemLocale = ui.PlatformDispatcher.instance.locale;
     final supportedLocales = S.delegate.supportedLocales;
-    
+
     for (final locale in supportedLocales) {
       if (locale.languageCode == systemLocale.languageCode) {
         return locale;
       }
     }
-    
+
     return const Locale('en');
   }
 

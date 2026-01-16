@@ -21,6 +21,32 @@ use symphonia::core::meta::MetadataOptions;
 use symphonia::core::probe::Hint;
 
 use crate::api::basic_pitch_postproc::extract_notes;
+use crate::api::aec::AecProcessor;
+use std::sync::Mutex;
+use once_cell::sync::Lazy;
+
+static AEC_PROCESSOR: Lazy<Mutex<Option<AecProcessor>>> = Lazy::new(|| Mutex::new(None));
+
+pub fn aec_init(
+    sample_rate: u32,
+    num_channels: u16,
+    reference_paths: Vec<String>,
+) -> Result<()> {
+    // 1. Prepare (Decoding happens here, outside the lock)
+    let new_aec = AecProcessor::new(sample_rate, num_channels, reference_paths)?;
+    
+    // 2. Store
+    let mut aec = AEC_PROCESSOR.lock().unwrap();
+    *aec = Some(new_aec);
+    log::info!("AEC initialized successfully");
+    Ok(())
+}
+
+pub fn aec_reset() {
+    let mut aec = AEC_PROCESSOR.lock().unwrap();
+    *aec = None;
+    log::info!("AEC reset");
+}
 
 // Output of offline analysis (Extracted Notes)
 #[derive(Clone, Debug)]
@@ -178,7 +204,7 @@ fn preprocess_chunk(chunk: &[f32]) -> Array3<f32> {
     array
 }
 
-fn decode_and_resample(path: &str, target_sample_rate: u32) -> Result<Vec<f32>> {
+pub(crate) fn decode_and_resample(path: &str, target_sample_rate: u32) -> Result<Vec<f32>> {
     use std::io::Read;
     use symphonia::core::io::MediaSourceStreamOptions;
 
@@ -316,7 +342,18 @@ fn decode_and_resample(path: &str, target_sample_rate: u32) -> Result<Vec<f32>> 
 }
 
 /// Detect pitch from a real-time audio buffer.
-pub fn detect_pitch_live(samples: Vec<f32>, sample_rate: f64) -> Result<LivePitch> {
+pub fn detect_pitch_live(mut samples: Vec<f32>, sample_rate: f64) -> Result<LivePitch> {
+    // Apply AEC if active
+    {
+        let mut aec_lock = AEC_PROCESSOR.lock().unwrap();
+        if let Some(aec) = aec_lock.as_mut() {
+            if let Err(e) = aec.process_frame(&mut samples) {
+                log::error!("AEC processing failed: {}", e);
+                return Err(e);
+            }
+        }
+    }
+
     const POWER_THRESHOLD: f64 = 0.1; // Lowered threshold for sensitivity
     const CLARITY_THRESHOLD: f64 = 0.6;
 

@@ -23,14 +23,15 @@ class SessionsListPage extends ConsumerWidget {
     final sessionsAsync = ref.watch(savedSessionsProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(context.l10n.savedSessions),
-      ),
+      appBar: AppBar(title: Text(context.l10n.savedSessions)),
       body: sessionsAsync.when(
         data: (List<db.Session> sessions) {
           if (sessions.isEmpty) {
             return Center(
-              child: Text(context.l10n.noSavedSessions, style: const TextStyle(color: Colors.white54)),
+              child: Text(
+                context.l10n.noSavedSessions,
+                style: const TextStyle(color: Colors.white54),
+              ),
             );
           }
           return ListView.builder(
@@ -47,7 +48,13 @@ class SessionsListPage extends ConsumerWidget {
                     children: [
                       const Icon(Icons.library_music, color: Colors.white),
                       const SizedBox(width: 10),
-                      Text(context.l10n.importAccompaniment, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                      Text(
+                        context.l10n.importAccompaniment,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -65,21 +72,25 @@ class SessionsListPage extends ConsumerWidget {
                       allowedExtensions: ['mp3', 'wav', 'aac'],
                     );
                     if (result != null && result.files.single.path != null) {
-                       final detailed = await ref.read(sessionRepositoryProvider).findSessionByFile(
-                         fileName: session.fileName,
-                         fileSize: session.fileSize,
-                       );
-                       if (detailed != null) {
-                         await ref.read(sessionRepositoryProvider).saveSession(
-                           filePath: session.filePath,
-                           fileName: session.fileName,
-                           fileSize: session.fileSize,
-                           durationSeconds: session.durationSeconds,
-                           noteEvents: detailed.events,
-                           accompanimentPath: result.files.single.path!,
-                         );
-                         ref.invalidate(savedSessionsProvider);
-                       }
+                      final detailed = await ref
+                          .read(sessionRepositoryProvider)
+                          .findSessionByFile(
+                            fileName: session.fileName,
+                            fileSize: session.fileSize,
+                          );
+                      if (detailed != null) {
+                        await ref
+                            .read(sessionRepositoryProvider)
+                            .saveSession(
+                              filePath: session.filePath,
+                              fileName: session.fileName,
+                              fileSize: session.fileSize,
+                              durationSeconds: session.durationSeconds,
+                              noteEvents: detailed.events,
+                              accompanimentPath: result.files.single.path!,
+                            );
+                        ref.invalidate(savedSessionsProvider);
+                      }
                     }
                     return false; // Don't dismiss
                   } else if (direction == DismissDirection.endToStart) {
@@ -96,7 +107,9 @@ class SessionsListPage extends ConsumerWidget {
                           ),
                           TextButton(
                             onPressed: () => Navigator.pop(context, true),
-                            style: TextButton.styleFrom(foregroundColor: Colors.redAccent),
+                            style: TextButton.styleFrom(
+                              foregroundColor: Colors.redAccent,
+                            ),
                             child: Text(context.l10n.delete),
                           ),
                         ],
@@ -105,7 +118,9 @@ class SessionsListPage extends ConsumerWidget {
 
                     if (confirmed == true) {
                       // Delete logic
-                      await ref.read(sessionRepositoryProvider).deleteSession(session.id);
+                      await ref
+                          .read(sessionRepositoryProvider)
+                          .deleteSession(session.id);
                       ref.invalidate(savedSessionsProvider);
                       return true;
                     }
@@ -121,23 +136,31 @@ class SessionsListPage extends ConsumerWidget {
                         ? Colors.cyanAccent
                         : Colors.white24,
                   ),
-                  title: Text(session.fileName, style: const TextStyle(color: Colors.white)),
+                  title: Text(
+                    session.fileName,
+                    style: const TextStyle(color: Colors.white),
+                  ),
                   subtitle: Text(
                     '${(session.durationSeconds).toStringAsFixed(1)}s • ${session.createdAt.toLocal().toString().split('.')[0]}',
                     style: const TextStyle(color: Colors.white38),
                   ),
-                  trailing: const Icon(Icons.chevron_right, color: Colors.white24),
+                  trailing: const Icon(
+                    Icons.chevron_right,
+                    color: Colors.white24,
+                  ),
                   onTap: () async {
                     // Load session
-                    final detailed = await ref.read(sessionRepositoryProvider).findSessionByFile(
-                      fileName: session.fileName,
-                      fileSize: session.fileSize,
-                    );
+                    final detailed = await ref
+                        .read(sessionRepositoryProvider)
+                        .findSessionByFile(
+                          fileName: session.fileName,
+                          fileSize: session.fileSize,
+                        );
                     if (detailed != null) {
-                       ref.read(pitchProvider.notifier).loadSession(detailed);
-                       if (context.mounted) {
-                         Navigator.of(context).pop();
-                       }
+                      ref.read(pitchProvider.notifier).loadSession(detailed);
+                      if (context.mounted) {
+                        Navigator.of(context).pop();
+                      }
                     }
                   },
                 ),

@@ -29,7 +29,6 @@ void main() {
     });
 
     test('should save and retrieve a session with note events', () async {
-      
       // Save
       await repository.saveSession(
         filePath: '/path/song.mp3',
@@ -37,8 +36,18 @@ void main() {
         fileSize: 1000,
         durationSeconds: 60.0,
         noteEvents: [
-          const rust.NoteEvent(startTime: 1.0, duration: 2.0, midiNote: 60, confidence: 0.9),
-          const rust.NoteEvent(startTime: 3.0, duration: 1.0, midiNote: 62, confidence: 0.8),
+          const rust.NoteEvent(
+            startTime: 1.0,
+            duration: 2.0,
+            midiNote: 60,
+            confidence: 0.9,
+          ),
+          const rust.NoteEvent(
+            startTime: 3.0,
+            duration: 1.0,
+            midiNote: 62,
+            confidence: 0.8,
+          ),
         ],
       );
 

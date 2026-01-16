@@ -68,7 +68,7 @@ class PitchSmoother {
   /// Performs a high-quality refinement on a segment of data.
   static List<double> smoothBatch(List<double> segment, {int window = 5}) {
     if (segment.length < window) return segment;
-    
+
     final results = List<double>.from(segment);
     for (int i = 0; i < segment.length; i++) {
       final start = max(0, i - window ~/ 2);
@@ -82,7 +82,8 @@ class PitchSmoother {
       final current = segment[i];
       if (current > 0 && median > 0) {
         final diffSemitones = (12 * (log(current / median) / log(2))).abs();
-        if (diffSemitones > 1.0) { // If more than 1 semitone away from median
+        if (diffSemitones > 1.0) {
+          // If more than 1 semitone away from median
           results[i] = median;
         } else {
           results[i] = current;

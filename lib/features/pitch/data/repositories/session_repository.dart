@@ -33,32 +33,36 @@ class SessionRepository {
     required String fileName,
     required int fileSize,
   }) async {
-    final session = await (_db.select(_db.sessions)
-          ..where((t) => t.fileName.equals(fileName) & t.fileSize.equals(fileSize)))
-        .getSingleOrNull();
+    final session =
+        await (_db.select(_db.sessions)..where(
+              (t) => t.fileName.equals(fileName) & t.fileSize.equals(fileSize),
+            ))
+            .getSingleOrNull();
 
     if (session == null) return null;
 
-    final dbEvents = await (_db.select(_db.noteEvents)
-          ..where((t) => t.sessionId.equals(session.id)))
-        .get();
+    final dbEvents = await (_db.select(
+      _db.noteEvents,
+    )..where((t) => t.sessionId.equals(session.id))).get();
 
-    final events = dbEvents.map((e) => rust.NoteEvent(
-      startTime: e.startTime,
-      duration: e.duration,
-      midiNote: e.midiNote,
-      confidence: e.confidence,
-    )).toList();
+    final events = dbEvents
+        .map(
+          (e) => rust.NoteEvent(
+            startTime: e.startTime,
+            duration: e.duration,
+            midiNote: e.midiNote,
+            confidence: e.confidence,
+          ),
+        )
+        .toList();
 
-    return SessionWithEvents(
-      session: session,
-      events: events,
-    );
+    return SessionWithEvents(session: session, events: events);
   }
 
   Future<List<Session>> getAllSessions() async {
-    return await (_db.select(_db.sessions)
-          ..orderBy([(t) => OrderingTerm(expression: t.createdAt, mode: OrderingMode.desc)]))
+    return await (_db.select(_db.sessions)..orderBy([
+          (t) => OrderingTerm(expression: t.createdAt, mode: OrderingMode.desc),
+        ]))
         .get();
   }
 
@@ -76,31 +80,44 @@ class SessionRepository {
   }) async {
     await _db.transaction(() async {
       // Check if exists and delete (overwrite strategy)
-      final existing = await (_db.select(_db.sessions)
-            ..where((t) => t.fileName.equals(fileName) & t.fileSize.equals(fileSize)))
-          .getSingleOrNull();
-          
+      final existing =
+          await (_db.select(_db.sessions)..where(
+                (t) =>
+                    t.fileName.equals(fileName) & t.fileSize.equals(fileSize),
+              ))
+              .getSingleOrNull();
+
       if (existing != null) {
-        await (_db.delete(_db.sessions)..where((t) => t.id.equals(existing.id))).go();
+        await (_db.delete(
+          _db.sessions,
+        )..where((t) => t.id.equals(existing.id))).go();
       }
 
-      final sessionId = await _db.into(_db.sessions).insert(SessionsCompanion.insert(
-            filePath: filePath,
-            fileName: fileName,
-            fileSize: fileSize,
-            durationSeconds: durationSeconds,
-            createdAt: DateTime.now(),
-            accompanimentPath: Value(accompanimentPath),
-          ));
+      final sessionId = await _db
+          .into(_db.sessions)
+          .insert(
+            SessionsCompanion.insert(
+              filePath: filePath,
+              fileName: fileName,
+              fileSize: fileSize,
+              durationSeconds: durationSeconds,
+              createdAt: DateTime.now(),
+              accompanimentPath: Value(accompanimentPath),
+            ),
+          );
 
       for (final event in noteEvents) {
-        await _db.into(_db.noteEvents).insert(NoteEventsCompanion.insert(
-              sessionId: sessionId,
-              startTime: event.startTime,
-              duration: event.duration,
-              midiNote: event.midiNote,
-              confidence: event.confidence,
-            ));
+        await _db
+            .into(_db.noteEvents)
+            .insert(
+              NoteEventsCompanion.insert(
+                sessionId: sessionId,
+                startTime: event.startTime,
+                duration: event.duration,
+                midiNote: event.midiNote,
+                confidence: event.confidence,
+              ),
+            );
       }
     });
   }

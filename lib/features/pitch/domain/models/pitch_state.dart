@@ -29,5 +29,6 @@ abstract class PitchState with _$PitchState {
     @Default(0.0) double monitoringVolume,
     @Default(false) bool isAccompanimentEnabled,
     String? accompanimentPath,
+    @Default(false) bool isAecEnabled,
   }) = _PitchState;
 }

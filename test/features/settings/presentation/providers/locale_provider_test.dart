@@ -17,9 +17,7 @@ void main() {
 
   test('AppLocaleNotifier should default to English', () {
     final container = ProviderContainer(
-      overrides: [
-        sharedPreferencesProvider.overrideWithValue(prefs),
-      ],
+      overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
     );
     addTearDown(container.dispose);
 
@@ -29,17 +27,15 @@ void main() {
 
   test('AppLocaleNotifier should update locale', () {
     final container = ProviderContainer(
-      overrides: [
-        sharedPreferencesProvider.overrideWithValue(prefs),
-      ],
+      overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
     );
     addTearDown(container.dispose);
 
     final notifier = container.read(appLocaleProvider.notifier);
-    
+
     notifier.setLocale(const Locale('zh'));
     expect(container.read(appLocaleProvider), equals(const Locale('zh')));
-    
+
     notifier.setLocale(const Locale('en'));
     expect(container.read(appLocaleProvider), equals(const Locale('en')));
   });
