@@ -11,14 +11,14 @@
 - [x] Task: Implement WebRTC AEC in Rust core (Green Phase)
 - [x] Task: Implement internal accompaniment decoding in Rust for the reference signal
 - [x] Task: Bridge AEC toggle and processing to Dart `Pitch` notifier
-- [ ] Task: Conductor - User Manual Verification 'Phase 2: Desktop Core - Software AEC Implementation' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Phase 2: Desktop Core - Software AEC Implementation' (Protocol in workflow.md)
 
 ## Phase 3: Hardware Awareness & Smart Logic
 - [x] Task: Write failing tests for Headphone Detection & Smart Toggle (Red Phase)
 - [x] Task: Implement Headphone detection using `audio_session`
 - [x] Task: Implement Smart Toggle logic in `PitchState` (Auto-OFF with headphones)
 - [x] Task: Update Mobile (Android/iOS) configurations for Native Voice Processing AEC
-- [ ] Task: Conductor - User Manual Verification 'Phase 3: Hardware Awareness & Smart Logic' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Phase 3: Hardware Awareness & Smart Logic' (Protocol in workflow.md)
 
 ## Phase 4: UI Integration & Refinement
 - [x] Task: Add AEC Status Indicator and Toggle to `PitchDetectorPage` control bar
