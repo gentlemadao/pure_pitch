@@ -11,6 +11,7 @@ import 'package:pure_pitch/features/pitch/presentation/providers/pitch_provider.
 import 'package:pure_pitch/features/pitch/presentation/widgets/pitch_visualizer.dart';
 import 'package:pure_pitch/features/pitch/presentation/pages/sessions_list_page.dart';
 import 'package:pure_pitch/features/settings/presentation/providers/locale_provider.dart';
+import 'package:pure_pitch/features/settings/presentation/providers/settings_provider.dart';
 
 class PitchDetectorPage extends ConsumerStatefulWidget {
   const PitchDetectorPage({super.key});
@@ -63,6 +64,7 @@ class _PitchDetectorPageState extends ConsumerState<PitchDetectorPage>
   @override
   Widget build(BuildContext context) {
     final pitchState = ref.watch(pitchProvider);
+    final settings = ref.watch(settingsProvider);
 
     ref.listen(pitchProvider.select((s) => s.isRecording), (prev, recording) {
       if (recording) {
@@ -154,6 +156,17 @@ class _PitchDetectorPageState extends ConsumerState<PitchDetectorPage>
                   ref.read(pitchProvider.notifier).toggleAec(value),
               secondary: const Icon(Icons.eco, color: Colors.white70),
             ),
+            SwitchListTile(
+              title: const Text(
+                'Vocal Activity Chart',
+                style: TextStyle(color: Colors.white),
+              ),
+              value: settings.showVocalActivity,
+              onChanged: (value) => ref
+                  .read(settingsProvider.notifier)
+                  .toggleVocalActivity(value),
+              secondary: const Icon(Icons.bar_chart, color: Colors.white70),
+            ),
             const Divider(),
             ListTile(
               leading: const Icon(Icons.language),
@@ -212,6 +225,7 @@ class _PitchDetectorPageState extends ConsumerState<PitchDetectorPage>
                         noteEvents: pitchState.analysisResults,
                         isRecording: isRecording,
                         visibleTimeWindow: value,
+                        showVocalActivity: settings.showVocalActivity,
                       );
                     },
                   ),

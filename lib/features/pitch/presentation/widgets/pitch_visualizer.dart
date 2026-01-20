@@ -7,6 +7,7 @@ import 'package:pure_pitch/src/rust/api/pitch.dart';
 import 'package:pure_pitch/features/pitch/domain/models/pitch_state.dart';
 import 'package:pure_pitch/features/pitch/domain/utils/pitch_coordinate_mapper.dart';
 import 'package:pure_pitch/features/pitch/presentation/widgets/pitch_timeline.dart';
+import 'package:pure_pitch/features/pitch/presentation/widgets/vocal_activity_chart.dart';
 
 class PitchVisualizer extends StatefulWidget {
   final List<TimestampedPitch> history;
@@ -15,6 +16,7 @@ class PitchVisualizer extends StatefulWidget {
   final double visibleTimeWindow;
   final int minNote;
   final int maxNote;
+  final bool showVocalActivity;
 
   const PitchVisualizer({
     super.key,
@@ -24,6 +26,7 @@ class PitchVisualizer extends StatefulWidget {
     this.visibleTimeWindow = 5.0,
     this.minNote = 36, // C2
     this.maxNote = 84, // C6
+    this.showVocalActivity = false,
   });
 
   @override
@@ -112,24 +115,41 @@ class _PitchVisualizerState extends State<PitchVisualizer> {
                   child: Column(
                     children: [
                       Expanded(
-                        child: CustomPaint(
-                          size: Size(
-                            max(totalWidth, constraints.maxWidth),
-                            constraints.maxHeight -
-                                30, // Leave space for timeline
-                          ),
-                          painter: _PitchPainter(
-                            history: widget.history,
-                            noteEvents: widget.noteEvents,
-                            isRecording: widget.isRecording,
-                            pixelsPerSecond: pixelsPerSecond,
-                            visibleTimeWindow: widget.visibleTimeWindow,
-                            minNote: effectiveMinNote,
-                            maxNote: effectiveMaxNote,
-                            viewportWidth: constraints.maxWidth,
-                            now: now,
-                            drawLabels: false,
-                          ),
+                        child: Stack(
+                          children: [
+                            CustomPaint(
+                              size: Size(
+                                max(totalWidth, constraints.maxWidth),
+                                constraints.maxHeight -
+                                    30, // Leave space for timeline
+                              ),
+                              painter: _PitchPainter(
+                                history: widget.history,
+                                noteEvents: widget.noteEvents,
+                                isRecording: widget.isRecording,
+                                pixelsPerSecond: pixelsPerSecond,
+                                visibleTimeWindow: widget.visibleTimeWindow,
+                                minNote: effectiveMinNote,
+                                maxNote: effectiveMaxNote,
+                                viewportWidth: constraints.maxWidth,
+                                now: now,
+                                drawLabels: false,
+                              ),
+                            ),
+                            if (widget.showVocalActivity &&
+                                widget.history.isNotEmpty)
+                              Positioned(
+                                left: 0,
+                                bottom: 0,
+                                width: max(totalWidth, constraints.maxWidth),
+                                child: VocalActivityChart(
+                                  history: widget.history,
+                                  pixelsPerSecond: pixelsPerSecond,
+                                  height: 80, // Height of the bar chart
+                                  sessionStartTime: widget.history.first.time,
+                                ),
+                              ),
+                          ],
                         ),
                       ),
                       PitchTimeline(
