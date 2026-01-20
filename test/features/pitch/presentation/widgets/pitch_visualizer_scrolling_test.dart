@@ -15,12 +15,19 @@ void main() {
     // Create history spanning 10 seconds.
     // Default visible window is 5s, so it should scroll.
     final history = [
-      TimestampedPitch(startTime, hz: 440.0, midiNote: 69, clarity: 1.0),
+      TimestampedPitch(
+        startTime,
+        hz: 440.0,
+        midiNote: 69,
+        clarity: 1.0,
+        amplitude: 0.5,
+      ),
       TimestampedPitch(
         startTime.add(const Duration(seconds: 10)),
         hz: 440.0,
         midiNote: 69,
         clarity: 1.0,
+        amplitude: 0.5,
       ),
     ];
 
@@ -65,12 +72,19 @@ void main() {
     (tester) async {
       final startTime = DateTime(2026, 1, 1, 12, 0, 0);
       final history = [
-        TimestampedPitch(startTime, hz: 440.0, midiNote: 69, clarity: 1.0),
+        TimestampedPitch(
+          startTime,
+          hz: 440.0,
+          midiNote: 69,
+          clarity: 1.0,
+          amplitude: 0.5,
+        ),
         TimestampedPitch(
           startTime.add(const Duration(seconds: 10)),
           hz: 440.0,
           midiNote: 69,
           clarity: 1.0,
+          amplitude: 0.5,
         ),
       ];
 

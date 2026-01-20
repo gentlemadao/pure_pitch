@@ -29,7 +29,12 @@ void main() {
           sampleRate: any(named: 'sampleRate'),
         ),
       ).thenAnswer(
-        (_) async => const LivePitch(hz: 440.0, midiNote: 69, clarity: 0.9),
+        (_) async => const LivePitch(
+          hz: 440.0,
+          midiNote: 69,
+          clarity: 0.9,
+          amplitude: 0.5,
+        ),
       );
 
       final container = ProviderContainer(

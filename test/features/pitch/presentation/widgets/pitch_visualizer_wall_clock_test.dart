@@ -15,6 +15,7 @@ void main() {
           hz: 440.0,
           midiNote: 69,
           clarity: 1.0,
+          amplitude: 0.5,
         ),
       ];
 

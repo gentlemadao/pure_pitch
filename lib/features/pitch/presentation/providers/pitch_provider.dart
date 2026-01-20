@@ -339,6 +339,7 @@ class Pitch extends _$Pitch {
           hz: refinedHz[i],
           midiNote: PitchSmoother.hzToMidi(refinedHz[i]),
           clarity: segment[i].clarity,
+          amplitude: segment[i].amplitude,
         );
         changed = true;
       }
@@ -501,6 +502,7 @@ class Pitch extends _$Pitch {
         hz: smoothed.hz,
         midiNote: smoothed.midiNote,
         clarity: result.clarity,
+        amplitude: result.amplitude,
       );
 
       final newHistory = [...state.history, newPoint];
@@ -519,6 +521,7 @@ class Pitch extends _$Pitch {
           hz: smoothed.hz,
           midiNote: smoothed.midiNote,
           clarity: result.clarity,
+          amplitude: result.amplitude,
         );
       }
 

@@ -12,6 +12,7 @@ abstract class TimestampedPitch with _$TimestampedPitch {
     required double hz,
     required int midiNote,
     required double clarity,
+    required double amplitude,
   }) = _TimestampedPitch;
 }
 

@@ -61,7 +61,8 @@ pub struct NoteEvent {
 pub struct LivePitch {
     pub hz: f64,
     pub midi_note: i32,
-    pub clarity: f32, // Confidence (0.0 - 1.0)
+    pub clarity: f32,   // Confidence (0.0 - 1.0)
+    pub amplitude: f32, // RMS amplitude (0.0 - 1.0)
 }
 
 use std::env;
@@ -361,6 +362,13 @@ pub fn detect_pitch_live(mut samples: Vec<f32>, sample_rate: f64) -> Result<Live
     let size = signal.len();
     let padding = size / 2;
 
+    // Calculate RMS amplitude
+    let rms = if size > 0 {
+        (signal.iter().map(|&x| x * x).sum::<f64>() / size as f64).sqrt() as f32
+    } else {
+        0.0
+    };
+
     let mut detector = McLeodDetector::new(size, padding);
 
     match detector.get_pitch(
@@ -381,12 +389,14 @@ pub fn detect_pitch_live(mut samples: Vec<f32>, sample_rate: f64) -> Result<Live
                 hz: pitch.frequency,
                 midi_note,
                 clarity: pitch.clarity as f32,
+                amplitude: rms,
             })
         }
         None => Ok(LivePitch {
             hz: 0.0,
             midi_note: 0,
             clarity: 0.0,
+            amplitude: rms,
         }),
     }
 }
