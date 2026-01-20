@@ -9,13 +9,13 @@
     - [x] Update the Rust-Dart bridge if necessary to ensure amplitude is passed along with frequency/confidence
 - [x] Task: Conductor - User Manual Verification 'Phase 1: Settings & Data Infrastructure' (Protocol in workflow.md) [32b5b92]
 
-## Phase 2: Recording & Synchronization
-- [ ] Task: Capture and Store Amplitude History
-    - [ ] Modify `PitchNotifier` to capture RMS/Peak amplitude from the microphone stream (Red/Green)
-    - [ ] Store amplitude samples in the same history buffer as pitch samples to ensure temporal alignment
-- [ ] Task: Sync Data with Time Ruler
-    - [ ] Ensure amplitude data correctly responds to the time scaling (5s vs 10s window) and horizontal scrolling
-- [ ] Task: Conductor - User Manual Verification 'Phase 2: Recording & Synchronization' (Protocol in workflow.md)
+## Phase 2: Recording & Synchronization [checkpoint: 9a55adf]
+- [x] Task: Capture and Store Amplitude History [4583e40]
+    - [x] Modify `PitchNotifier` to capture RMS/Peak amplitude from the microphone stream (Red/Green)
+    - [x] Store amplitude samples in the same history buffer as pitch samples to ensure temporal alignment
+- [x] Task: Sync Data with Time Ruler [4583e40]
+    - [x] Ensure amplitude data correctly responds to the time scaling (5s vs 10s window) and horizontal scrolling
+- [x] Task: Conductor - User Manual Verification 'Phase 2: Recording & Synchronization' (Protocol in workflow.md) [9a55adf]
 
 ## Phase 3: Visualization & UI Integration
 - [ ] Task: Implement Vocal Activity Painter
