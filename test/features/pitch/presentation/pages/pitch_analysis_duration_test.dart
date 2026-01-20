@@ -13,11 +13,17 @@ import 'package:pure_pitch/core/localization/generated/l10n.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:pure_pitch/features/pitch/domain/models/pitch_state.dart';
 import 'dart:io';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:pure_pitch/core/services/storage_service.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+  late SharedPreferences prefs;
 
   setUpAll(() async {
+    SharedPreferences.setMockInitialValues({});
+    prefs = await SharedPreferences.getInstance();
+
     if (!RustLib.instance.initialized) {
       final String dylibPath;
       if (Platform.isMacOS) {
@@ -63,6 +69,7 @@ void main() {
       ProviderScope(
         overrides: [
           pitchProvider.overrideWith(() => MockPitchNotifier(noteEvents)),
+          sharedPreferencesProvider.overrideWithValue(prefs),
         ],
         child: const MaterialApp(
           localizationsDelegates: [
@@ -122,6 +129,7 @@ void main() {
       ProviderScope(
         overrides: [
           pitchProvider.overrideWith(() => MockPitchNotifier(noteEvents)),
+          sharedPreferencesProvider.overrideWithValue(prefs),
         ],
         child: const MaterialApp(
           localizationsDelegates: [

@@ -26,6 +26,9 @@ rust-build:
 rust-test:
     cd rust && cargo test
 
+flutter-test:
+    flutter test
+
 # Check Dart code formatting (fails if formatting is needed)
 format-check:
     dart format --output=none --set-exit-if-changed lib test integration_test packages
@@ -39,4 +42,4 @@ setup-libs:
     ./scripts/download_libs.sh
 
 # Perform a full check: localization, code generation, formatting, analysis, and tests
-check: l10n build format-check analyze rust-test
+check: l10n build format-check analyze rust-test flutter-test

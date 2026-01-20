@@ -9,18 +9,25 @@ import 'package:pure_pitch/features/pitch/presentation/providers/pitch_provider.
 import 'package:pure_pitch/core/localization/generated/l10n.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:pure_pitch/core/services/storage_service.dart';
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  group('PitchDetectorPage Scaling', () {
-    setUpAll(() async {
-      // ... same ...
-    });
+  late SharedPreferences prefs;
 
+  setUpAll(() async {
+    SharedPreferences.setMockInitialValues({});
+    prefs = await SharedPreferences.getInstance();
+  });
+
+  group('PitchDetectorPage Scaling', () {
     testWidgets('Zoom buttons exist and update state', (tester) async {
       await tester.pumpWidget(
-        const ProviderScope(
-          child: MaterialApp(
+        ProviderScope(
+          overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
+          child: const MaterialApp(
             localizationsDelegates: [
               S.delegate,
               GlobalMaterialLocalizations.delegate,
