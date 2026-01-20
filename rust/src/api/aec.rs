@@ -4,7 +4,6 @@
 use anyhow::Result;
 use aec3::voip::VoipAec3;
 use std::collections::VecDeque;
-use crate::api::pitch::decode_and_resample;
 
 pub(crate) struct AecProcessor {
     processor: VoipAec3,
@@ -18,7 +17,7 @@ pub(crate) struct AecProcessor {
 unsafe impl Send for AecProcessor {}
 
 impl AecProcessor {
-    pub(crate) fn new(sample_rate: u32, num_channels: u16, reference_paths: Vec<String>) -> Result<Self> {
+    pub(crate) fn new(sample_rate: u32, num_channels: u16, reference_buffers: Vec<Vec<f32>>) -> Result<Self> {
         let processor = VoipAec3::builder(
             sample_rate as usize,
             num_channels as usize,
@@ -28,22 +27,20 @@ impl AecProcessor {
         // 10ms chunk size (e.g. 441 at 44.1kHz)
         let chunk_size = (sample_rate / 100) as usize;
 
-        // Decode and mix all reference sources
+        // Mix all reference sources
         let mut mixed_reference = Vec::new();
-        let mut source_count = 0;
-        for path in reference_paths {
-            if let Ok(samples) = decode_and_resample(&path, sample_rate) {
-                source_count += 1;
-                if mixed_reference.is_empty() {
-                    mixed_reference = samples;
-                } else {
-                    let len = std::cmp::min(mixed_reference.len(), samples.len());
-                    for i in 0..len {
-                        mixed_reference[i] += samples[i];
-                    }
-                    if samples.len() > mixed_reference.len() {
-                        mixed_reference.extend_from_slice(&samples[mixed_reference.len()..]);
-                    }
+        let source_count = reference_buffers.len();
+        
+        for samples in reference_buffers {
+            if mixed_reference.is_empty() {
+                mixed_reference = samples;
+            } else {
+                let len = std::cmp::min(mixed_reference.len(), samples.len());
+                for i in 0..len {
+                    mixed_reference[i] += samples[i];
+                }
+                if samples.len() > mixed_reference.len() {
+                    mixed_reference.extend_from_slice(&samples[mixed_reference.len()..]);
                 }
             }
         }

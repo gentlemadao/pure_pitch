@@ -24,16 +24,54 @@ use crate::api::basic_pitch_postproc::extract_notes;
 use crate::api::aec::AecProcessor;
 use std::sync::Mutex;
 use once_cell::sync::Lazy;
+use std::collections::HashMap;
 
 static AEC_PROCESSOR: Lazy<Mutex<Option<AecProcessor>>> = Lazy::new(|| Mutex::new(None));
+static AUDIO_CACHE: Lazy<Mutex<HashMap<String, Vec<f32>>>> = Lazy::new(|| Mutex::new(HashMap::new()));
+
+pub fn clear_audio_cache() {
+    let mut cache = AUDIO_CACHE.lock().unwrap();
+    cache.clear();
+    log::info!("Audio cache cleared");
+}
+
+fn get_cached_or_decode(path: &str, target_sample_rate: u32) -> Result<Vec<f32>> {
+    let key = format!("{}:{}", path, target_sample_rate);
+    
+    // 1. Check Cache
+    {
+        let cache = AUDIO_CACHE.lock().unwrap();
+        if let Some(data) = cache.get(&key) {
+            log::info!("Cache hit for {}", key);
+            return Ok(data.clone());
+        }
+    }
+
+    // 2. Decode
+    log::info!("Cache miss for {}, decoding...", key);
+    let samples = decode_and_resample(path, target_sample_rate)?;
+
+    // 3. Store
+    {
+        let mut cache = AUDIO_CACHE.lock().unwrap();
+        cache.insert(key, samples.clone());
+    }
+
+    Ok(samples)
+}
 
 pub fn aec_init(
     sample_rate: u32,
     num_channels: u16,
     reference_paths: Vec<String>,
 ) -> Result<()> {
-    // 1. Prepare (Decoding happens here, outside the lock)
-    let new_aec = AecProcessor::new(sample_rate, num_channels, reference_paths)?;
+    // 1. Prepare buffers (decoding happens here or fetched from cache)
+    let mut buffers = Vec::new();
+    for path in reference_paths {
+        buffers.push(get_cached_or_decode(&path, sample_rate)?);
+    }
+
+    let new_aec = AecProcessor::new(sample_rate, num_channels, buffers)?;
     
     // 2. Store
     let mut aec = AEC_PROCESSOR.lock().unwrap();
@@ -115,7 +153,8 @@ pub fn init_ort(dylib_path: Option<String>) -> Result<()> {
 
 /// Analyze an audio file and return a list of note events.
 pub fn analyze_audio_file(audio_path: String, model_path: String) -> Result<Vec<NoteEvent>> {
-    let samples = decode_and_resample(&audio_path, 22050)?;
+    // 22050 is required for Basic Pitch model
+    let samples = get_cached_or_decode(&audio_path, 22050)?;
     let raw_notes = run_inference_internal(&samples, &model_path)?;
     let merged_notes = merge_note_events(raw_notes);
     Ok(enforce_global_monophony(merged_notes))

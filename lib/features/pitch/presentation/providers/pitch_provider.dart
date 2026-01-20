@@ -98,10 +98,12 @@ class Pitch extends _$Pitch {
 
     // Default: AEC ON if NO headphones, OFF if headphones.
     state = state.copyWith(isAecEnabled: !hasHeadphones);
+    _updateAec();
   }
 
   void toggleAec(bool enabled) {
     state = state.copyWith(isAecEnabled: enabled);
+    _updateAec();
   }
 
   AudioPlayer get _player {
@@ -188,6 +190,7 @@ class Pitch extends _$Pitch {
           currentFilePath: audioPath,
         );
         _loadPlaybackFiles();
+        _updateAec();
       }
     } catch (e) {
       if (ref.mounted) {
@@ -202,6 +205,37 @@ class Pitch extends _$Pitch {
       await _stopCapture();
     } else {
       await _startCapture();
+    }
+  }
+
+  Future<void> _updateAec() async {
+    if (kIsWeb || !state.isAecEnabled) {
+      await rust.aecReset();
+      return;
+    }
+
+    final List<String> referencePaths = [];
+    if (state.isAccompanimentEnabled && state.accompanimentPath != null) {
+      referencePaths.add(state.accompanimentPath!);
+    }
+    if (state.monitoringVolume > 0 && state.currentFilePath != null) {
+      referencePaths.add(state.currentFilePath!);
+    }
+
+    if (referencePaths.isNotEmpty) {
+      try {
+        talker.info('Pre-loading AEC with references: $referencePaths');
+        await rust.aecInit(
+          sampleRate: _sampleRate,
+          numChannels: 1,
+          referencePaths: referencePaths,
+        );
+        talker.info('AEC Pre-loaded successfully');
+      } catch (e, s) {
+        talker.error('AEC Pre-load Failed', e, s);
+      }
+    } else {
+      await rust.aecReset();
     }
   }
 
@@ -222,24 +256,9 @@ class Pitch extends _$Pitch {
         final session = await AudioSession.instance;
         await session.setActive(true);
 
-        // 2. Initialize Rust AEC (Universal Software solution for all 5 platforms)
-        if (state.isAecEnabled && !kIsWeb) {
-          final List<String> referencePaths = [];
-          if (state.isAccompanimentEnabled && state.accompanimentPath != null) {
-            referencePaths.add(state.accompanimentPath!);
-          }
-          if (state.monitoringVolume > 0 && state.currentFilePath != null) {
-            referencePaths.add(state.currentFilePath!);
-          }
-
-          if (referencePaths.isNotEmpty) {
-            await rust.aecInit(
-              sampleRate: _sampleRate,
-              numChannels: 1,
-              referencePaths: referencePaths,
-            );
-          }
-        }
+        // 2. AEC is now pre-loaded by _updateAec().
+        // We assume it's ready. If not, it might process with empty reference (no cancellation)
+        // until the async init finishes, which is acceptable for instant start.
 
         // 3. Start the recording stream
         talker.info('Starting recorder stream (Raw High-Fidelity)...');
@@ -293,7 +312,8 @@ class Pitch extends _$Pitch {
       _stopRefinementTimer();
       _stopOriginalAudio();
       _stopAccompaniment();
-      await rust.aecReset();
+      // Do NOT reset AEC here. Keep it warmed up for the next take.
+      // await rust.aecReset();
       // Final refinement
       _refineHistory();
     } catch (e) {
@@ -368,10 +388,12 @@ class Pitch extends _$Pitch {
     }
     state = state.copyWith(monitoringVolume: next);
     _audioPlayer?.setVolume(next);
+    _updateAec();
   }
 
   void toggleAccompaniment(bool enabled) {
     state = state.copyWith(isAccompanimentEnabled: enabled);
+    _updateAec();
   }
 
   Future<void> updateAccompanimentPath(String path) async {
@@ -398,6 +420,7 @@ class Pitch extends _$Pitch {
       state = state.copyWith(accompanimentPath: path);
       // Pre-load the new accompaniment
       _loadPlaybackFiles();
+      _updateAec();
     }
   }
 
