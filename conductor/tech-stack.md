@@ -31,6 +31,7 @@
     *   **Resampling**: `rubato` (Resampling to 22,050 Hz).
     *   **DSP**: `rustfft` & `ndarray` (Manual STFT/Spectrogram implementation).
     *   **AI Inference**: `ort` (ONNX Runtime for Basic Pitch model).
+    *   **Echo Cancellation**: `aec3` (WebRTC software AEC for desktop) and native platform voice processing modes.
     *   **Pitch Detection**: `pitch-detection` (McLeod algorithm for real-time tracking).
 
 ## Infrastructure & Tooling

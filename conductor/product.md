@@ -19,6 +19,7 @@ PurePitch aims to be a cross-platform, high-performance, and premium local pitch
 * **Session Recording & Analysis**: Support for saving vocal sessions with analytical data playback overlays.
 * **Horizontal Timeline**: A synchronized horizontal time ruler providing precise visual context for pitch events.
 * **Accompaniment Sync**: Support for importing and playing backing tracks in sync with vocal recording and review.
+    * **Smart Echo Cancellation (AEC)**: Cross-platform software and hardware AEC to prevent accompaniment bleed into the vocal track, with intelligent auto-activation when headphones are not detected.
 * **Internationalization (i18n)**: Full multi-language support (English/Chinese) with persistent preference settings.
 
 # Visual Identity & UX
