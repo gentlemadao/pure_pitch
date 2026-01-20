@@ -69,12 +69,8 @@ class VocalActivityPainter extends CustomPainter {
       final x = (diffMs / 1000.0) * pixelsPerSecond;
 
       // Normalize amplitude for display
-      // Amplitude is RMS, usually small. Let's scale it.
-      // Assuming 0.0 to 1.0 range, but practically most vocal signals are < 0.5 RMS.
-      final totalHeight = (point.amplitude * size.height * 2.0).clamp(
-        0.0,
-        size.height,
-      );
+      // Amplitude is RMS, usually small (0.01 - 0.1). Let's scale it aggressively.
+      final totalHeight = (point.amplitude * size.height * 10.0).clamp(0.0, size.height);
 
       if (totalHeight <= 0) continue;
 

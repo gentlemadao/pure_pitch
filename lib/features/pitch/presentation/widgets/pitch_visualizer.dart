@@ -145,7 +145,7 @@ class _PitchVisualizerState extends State<PitchVisualizer> {
                                 child: VocalActivityChart(
                                   history: widget.history,
                                   pixelsPerSecond: pixelsPerSecond,
-                                  height: 80, // Height of the bar chart
+                                  height: 120, // Height of the bar chart
                                   sessionStartTime: widget.history.first.time,
                                 ),
                               ),
