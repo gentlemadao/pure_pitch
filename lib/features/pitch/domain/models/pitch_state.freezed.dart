@@ -14,7 +14,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$TimestampedPitch {
 
- DateTime get time; double get hz; int get midiNote; double get clarity;
+ DateTime get time; double get hz; int get midiNote; double get clarity; double get amplitude;
 /// Create a copy of TimestampedPitch
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -25,16 +25,16 @@ $TimestampedPitchCopyWith<TimestampedPitch> get copyWith => _$TimestampedPitchCo
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is TimestampedPitch&&(identical(other.time, time) || other.time == time)&&(identical(other.hz, hz) || other.hz == hz)&&(identical(other.midiNote, midiNote) || other.midiNote == midiNote)&&(identical(other.clarity, clarity) || other.clarity == clarity));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is TimestampedPitch&&(identical(other.time, time) || other.time == time)&&(identical(other.hz, hz) || other.hz == hz)&&(identical(other.midiNote, midiNote) || other.midiNote == midiNote)&&(identical(other.clarity, clarity) || other.clarity == clarity)&&(identical(other.amplitude, amplitude) || other.amplitude == amplitude));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,time,hz,midiNote,clarity);
+int get hashCode => Object.hash(runtimeType,time,hz,midiNote,clarity,amplitude);
 
 @override
 String toString() {
-  return 'TimestampedPitch(time: $time, hz: $hz, midiNote: $midiNote, clarity: $clarity)';
+  return 'TimestampedPitch(time: $time, hz: $hz, midiNote: $midiNote, clarity: $clarity, amplitude: $amplitude)';
 }
 
 
@@ -45,7 +45,7 @@ abstract mixin class $TimestampedPitchCopyWith<$Res>  {
   factory $TimestampedPitchCopyWith(TimestampedPitch value, $Res Function(TimestampedPitch) _then) = _$TimestampedPitchCopyWithImpl;
 @useResult
 $Res call({
- DateTime time, double hz, int midiNote, double clarity
+ DateTime time, double hz, int midiNote, double clarity, double amplitude
 });
 
 
@@ -62,12 +62,13 @@ class _$TimestampedPitchCopyWithImpl<$Res>
 
 /// Create a copy of TimestampedPitch
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? time = null,Object? hz = null,Object? midiNote = null,Object? clarity = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? time = null,Object? hz = null,Object? midiNote = null,Object? clarity = null,Object? amplitude = null,}) {
   return _then(_self.copyWith(
 time: null == time ? _self.time : time // ignore: cast_nullable_to_non_nullable
 as DateTime,hz: null == hz ? _self.hz : hz // ignore: cast_nullable_to_non_nullable
 as double,midiNote: null == midiNote ? _self.midiNote : midiNote // ignore: cast_nullable_to_non_nullable
 as int,clarity: null == clarity ? _self.clarity : clarity // ignore: cast_nullable_to_non_nullable
+as double,amplitude: null == amplitude ? _self.amplitude : amplitude // ignore: cast_nullable_to_non_nullable
 as double,
   ));
 }
@@ -153,10 +154,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( DateTime time,  double hz,  int midiNote,  double clarity)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( DateTime time,  double hz,  int midiNote,  double clarity,  double amplitude)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _TimestampedPitch() when $default != null:
-return $default(_that.time,_that.hz,_that.midiNote,_that.clarity);case _:
+return $default(_that.time,_that.hz,_that.midiNote,_that.clarity,_that.amplitude);case _:
   return orElse();
 
 }
@@ -174,10 +175,10 @@ return $default(_that.time,_that.hz,_that.midiNote,_that.clarity);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( DateTime time,  double hz,  int midiNote,  double clarity)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( DateTime time,  double hz,  int midiNote,  double clarity,  double amplitude)  $default,) {final _that = this;
 switch (_that) {
 case _TimestampedPitch():
-return $default(_that.time,_that.hz,_that.midiNote,_that.clarity);case _:
+return $default(_that.time,_that.hz,_that.midiNote,_that.clarity,_that.amplitude);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -194,10 +195,10 @@ return $default(_that.time,_that.hz,_that.midiNote,_that.clarity);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( DateTime time,  double hz,  int midiNote,  double clarity)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( DateTime time,  double hz,  int midiNote,  double clarity,  double amplitude)?  $default,) {final _that = this;
 switch (_that) {
 case _TimestampedPitch() when $default != null:
-return $default(_that.time,_that.hz,_that.midiNote,_that.clarity);case _:
+return $default(_that.time,_that.hz,_that.midiNote,_that.clarity,_that.amplitude);case _:
   return null;
 
 }
@@ -209,13 +210,14 @@ return $default(_that.time,_that.hz,_that.midiNote,_that.clarity);case _:
 
 
 class _TimestampedPitch implements TimestampedPitch {
-  const _TimestampedPitch(this.time, {required this.hz, required this.midiNote, required this.clarity});
+  const _TimestampedPitch(this.time, {required this.hz, required this.midiNote, required this.clarity, required this.amplitude});
   
 
 @override final  DateTime time;
 @override final  double hz;
 @override final  int midiNote;
 @override final  double clarity;
+@override final  double amplitude;
 
 /// Create a copy of TimestampedPitch
 /// with the given fields replaced by the non-null parameter values.
@@ -227,16 +229,16 @@ _$TimestampedPitchCopyWith<_TimestampedPitch> get copyWith => __$TimestampedPitc
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _TimestampedPitch&&(identical(other.time, time) || other.time == time)&&(identical(other.hz, hz) || other.hz == hz)&&(identical(other.midiNote, midiNote) || other.midiNote == midiNote)&&(identical(other.clarity, clarity) || other.clarity == clarity));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _TimestampedPitch&&(identical(other.time, time) || other.time == time)&&(identical(other.hz, hz) || other.hz == hz)&&(identical(other.midiNote, midiNote) || other.midiNote == midiNote)&&(identical(other.clarity, clarity) || other.clarity == clarity)&&(identical(other.amplitude, amplitude) || other.amplitude == amplitude));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,time,hz,midiNote,clarity);
+int get hashCode => Object.hash(runtimeType,time,hz,midiNote,clarity,amplitude);
 
 @override
 String toString() {
-  return 'TimestampedPitch(time: $time, hz: $hz, midiNote: $midiNote, clarity: $clarity)';
+  return 'TimestampedPitch(time: $time, hz: $hz, midiNote: $midiNote, clarity: $clarity, amplitude: $amplitude)';
 }
 
 
@@ -247,7 +249,7 @@ abstract mixin class _$TimestampedPitchCopyWith<$Res> implements $TimestampedPit
   factory _$TimestampedPitchCopyWith(_TimestampedPitch value, $Res Function(_TimestampedPitch) _then) = __$TimestampedPitchCopyWithImpl;
 @override @useResult
 $Res call({
- DateTime time, double hz, int midiNote, double clarity
+ DateTime time, double hz, int midiNote, double clarity, double amplitude
 });
 
 
@@ -264,12 +266,13 @@ class __$TimestampedPitchCopyWithImpl<$Res>
 
 /// Create a copy of TimestampedPitch
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? time = null,Object? hz = null,Object? midiNote = null,Object? clarity = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? time = null,Object? hz = null,Object? midiNote = null,Object? clarity = null,Object? amplitude = null,}) {
   return _then(_TimestampedPitch(
 null == time ? _self.time : time // ignore: cast_nullable_to_non_nullable
 as DateTime,hz: null == hz ? _self.hz : hz // ignore: cast_nullable_to_non_nullable
 as double,midiNote: null == midiNote ? _self.midiNote : midiNote // ignore: cast_nullable_to_non_nullable
 as int,clarity: null == clarity ? _self.clarity : clarity // ignore: cast_nullable_to_non_nullable
+as double,amplitude: null == amplitude ? _self.amplitude : amplitude // ignore: cast_nullable_to_non_nullable
 as double,
   ));
 }

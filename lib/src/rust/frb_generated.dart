@@ -65,7 +65,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   String get codegenVersion => '2.11.1';
 
   @override
-  int get rustContentHash => 1046858362;
+  int get rustContentHash => 1920052046;
 
   static const kDefaultExternalLibraryLoaderConfig =
       ExternalLibraryLoaderConfig(
@@ -88,6 +88,8 @@ abstract class RustLibApi extends BaseApi {
     required String audioPath,
     required String modelPath,
   });
+
+  Future<void> crateApiPitchClearAudioCache();
 
   Stream<LogEntry> crateApiLoggingCreateLogStream();
 
@@ -206,6 +208,33 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
+  Future<void> crateApiPitchClearAudioCache() {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 4,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateApiPitchClearAudioCacheConstMeta,
+        argValues: [],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiPitchClearAudioCacheConstMeta =>
+      const TaskConstMeta(debugName: "clear_audio_cache", argNames: []);
+
+  @override
   Stream<LogEntry> crateApiLoggingCreateLogStream() {
     final sink = RustStreamSink<LogEntry>();
     unawaited(
@@ -217,7 +246,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
             pdeCallFfi(
               generalizedFrbRustBinding,
               serializer,
-              funcId: 4,
+              funcId: 5,
               port: port_,
             );
           },
@@ -251,7 +280,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 5,
+            funcId: 6,
             port: port_,
           );
         },
@@ -282,7 +311,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 6,
+            funcId: 7,
             port: port_,
           );
         },
@@ -376,12 +405,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   LivePitch dco_decode_live_pitch(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 3)
-      throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
+    if (arr.length != 4)
+      throw Exception('unexpected arr length: expect 4 but see ${arr.length}');
     return LivePitch(
       hz: dco_decode_f_64(arr[0]),
       midiNote: dco_decode_i_32(arr[1]),
       clarity: dco_decode_f_32(arr[2]),
+      amplitude: dco_decode_f_32(arr[3]),
     );
   }
 
@@ -546,7 +576,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_hz = sse_decode_f_64(deserializer);
     var var_midiNote = sse_decode_i_32(deserializer);
     var var_clarity = sse_decode_f_32(deserializer);
-    return LivePitch(hz: var_hz, midiNote: var_midiNote, clarity: var_clarity);
+    var var_amplitude = sse_decode_f_32(deserializer);
+    return LivePitch(
+      hz: var_hz,
+      midiNote: var_midiNote,
+      clarity: var_clarity,
+      amplitude: var_amplitude,
+    );
   }
 
   @protected
@@ -741,6 +777,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_f_64(self.hz, serializer);
     sse_encode_i_32(self.midiNote, serializer);
     sse_encode_f_32(self.clarity, serializer);
+    sse_encode_f_32(self.amplitude, serializer);
   }
 
   @protected

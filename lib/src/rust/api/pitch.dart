@@ -6,8 +6,11 @@
 import '../frb_generated.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
-// These functions are ignored because they are not marked as `pub`: `decode_and_resample`, `enforce_global_monophony`, `merge_note_events`, `preprocess_chunk`, `run_inference_internal`
+// These functions are ignored because they are not marked as `pub`: `decode_and_resample`, `enforce_global_monophony`, `get_cached_or_decode`, `merge_note_events`, `preprocess_chunk`, `run_inference_internal`
 // These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `clone`, `fmt`
+
+Future<void> clearAudioCache() =>
+    RustLib.instance.api.crateApiPitchClearAudioCache();
 
 Future<void> aecInit({
   required int sampleRate,
@@ -51,15 +54,18 @@ class LivePitch {
   final double hz;
   final int midiNote;
   final double clarity;
+  final double amplitude;
 
   const LivePitch({
     required this.hz,
     required this.midiNote,
     required this.clarity,
+    required this.amplitude,
   });
 
   @override
-  int get hashCode => hz.hashCode ^ midiNote.hashCode ^ clarity.hashCode;
+  int get hashCode =>
+      hz.hashCode ^ midiNote.hashCode ^ clarity.hashCode ^ amplitude.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -68,7 +74,8 @@ class LivePitch {
           runtimeType == other.runtimeType &&
           hz == other.hz &&
           midiNote == other.midiNote &&
-          clarity == other.clarity;
+          clarity == other.clarity &&
+          amplitude == other.amplitude;
 }
 
 class NoteEvent {

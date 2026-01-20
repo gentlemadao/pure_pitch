@@ -37,7 +37,7 @@ flutter_rust_bridge::frb_generated_boilerplate!(
     default_rust_auto_opaque = RustAutoOpaqueMoi,
 );
 pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_VERSION: &str = "2.11.1";
-pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = 1046858362;
+pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = 1920052046;
 
 // Section: executor
 
@@ -153,6 +153,40 @@ fn wire__crate__api__pitch__analyze_audio_file_impl(
                         Ok(output_ok)
                     })(),
                 )
+            }
+        },
+    )
+}
+fn wire__crate__api__pitch__clear_audio_cache_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "clear_audio_cache",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            deserializer.end();
+            move |context| {
+                transform_result_sse::<_, ()>((move || {
+                    let output_ok = Result::<_, ()>::Ok({
+                        crate::api::pitch::clear_audio_cache();
+                    })?;
+                    Ok(output_ok)
+                })())
             }
         },
     )
@@ -378,10 +412,12 @@ impl SseDecode for crate::api::pitch::LivePitch {
         let mut var_hz = <f64>::sse_decode(deserializer);
         let mut var_midiNote = <i32>::sse_decode(deserializer);
         let mut var_clarity = <f32>::sse_decode(deserializer);
+        let mut var_amplitude = <f32>::sse_decode(deserializer);
         return crate::api::pitch::LivePitch {
             hz: var_hz,
             midi_note: var_midiNote,
             clarity: var_clarity,
+            amplitude: var_amplitude,
         };
     }
 }
@@ -489,9 +525,10 @@ fn pde_ffi_dispatcher_primary_impl(
         1 => wire__crate__api__pitch__aec_init_impl(port, ptr, rust_vec_len, data_len),
         2 => wire__crate__api__pitch__aec_reset_impl(port, ptr, rust_vec_len, data_len),
         3 => wire__crate__api__pitch__analyze_audio_file_impl(port, ptr, rust_vec_len, data_len),
-        4 => wire__crate__api__logging__create_log_stream_impl(port, ptr, rust_vec_len, data_len),
-        5 => wire__crate__api__pitch__detect_pitch_live_impl(port, ptr, rust_vec_len, data_len),
-        6 => wire__crate__api__pitch__init_ort_impl(port, ptr, rust_vec_len, data_len),
+        4 => wire__crate__api__pitch__clear_audio_cache_impl(port, ptr, rust_vec_len, data_len),
+        5 => wire__crate__api__logging__create_log_stream_impl(port, ptr, rust_vec_len, data_len),
+        6 => wire__crate__api__pitch__detect_pitch_live_impl(port, ptr, rust_vec_len, data_len),
+        7 => wire__crate__api__pitch__init_ort_impl(port, ptr, rust_vec_len, data_len),
         _ => unreachable!(),
     }
 }
@@ -517,6 +554,7 @@ impl flutter_rust_bridge::IntoDart for crate::api::pitch::LivePitch {
             self.hz.into_into_dart().into_dart(),
             self.midi_note.into_into_dart().into_dart(),
             self.clarity.into_into_dart().into_dart(),
+            self.amplitude.into_into_dart().into_dart(),
         ]
         .into_dart()
     }
@@ -688,6 +726,7 @@ impl SseEncode for crate::api::pitch::LivePitch {
         <f64>::sse_encode(self.hz, serializer);
         <i32>::sse_encode(self.midi_note, serializer);
         <f32>::sse_encode(self.clarity, serializer);
+        <f32>::sse_encode(self.amplitude, serializer);
     }
 }
 
