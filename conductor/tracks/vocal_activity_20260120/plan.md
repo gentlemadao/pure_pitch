@@ -18,20 +18,20 @@
 - [x] Task: Conductor - User Manual Verification 'Phase 2: Recording & Synchronization' (Protocol in workflow.md) [9a55adf]
 
 ## Phase 3: Visualization & UI Integration
-- [ ] Task: Implement Vocal Activity Painter
-    - [ ] Create `VocalActivityPainter` to draw stacked bars (Green for voiced, Gray for unvoiced) based on the amplitude data (Red/Green)
-    - [ ] Apply semi-transparency and ensure the visual style matches the "glowing/premium" aesthetic
-- [ ] Task: Integrate Overlay in Pitch Detector Page
-    - [ ] Add the `VocalActivityChart` widget as a `Positioned` overlay at the bottom of the pitch chart area
-    - [ ] Ensure it only renders when `showVocalActivity` is enabled in settings
-- [ ] Task: Add Toggle to Settings Drawer
-    - [ ] Add a "Vocal Activity Chart" Switch to the settings drawer UI
+- [x] Task: Implement Vocal Activity Painter [2c6c6e3]
+    - [x] Create `VocalActivityPainter` to draw stacked bars (Green for voiced, Gray for unvoiced) based on the amplitude data (Red/Green)
+    - [x] Apply semi-transparency and ensure the visual style matches the "glowing/premium" aesthetic
+- [x] Task: Integrate Overlay in Pitch Detector Page [2c6c6e3]
+    - [x] Add the `VocalActivityChart` widget as a `Positioned` overlay at the bottom of the pitch chart area
+    - [x] Ensure it only renders when `showVocalActivity` is enabled in settings
+- [x] Task: Add Toggle to Settings Drawer [2c6c6e3]
+    - [x] Add a "Vocal Activity Chart" Switch to the settings drawer UI
 - [ ] Task: Conductor - User Manual Verification 'Phase 3: Visualization & UI Integration' (Protocol in workflow.md)
 
-## Phase 4: Refinement & Performance
-- [ ] Task: Optimize Rendering Performance
-    - [ ] Verify that adding the overlay doesn't degrade frame rates during recording (Red/Green)
-    - [ ] Use `RepaintBoundary` or similar optimizations if necessary
-- [ ] Task: Final Visual Polish
-    - [ ] Fine-tune the Green/Gray color balance and transparency levels for readability
-- [ ] Task: Conductor - User Manual Verification 'Phase 4: Refinement & Performance' (Protocol in workflow.md)
+## Phase 4: Refinement & Performance [checkpoint: 19bc3d8]
+- [x] Task: Optimize Rendering Performance [cd3579e]
+    - [x] Verify that adding the overlay doesn't degrade frame rates during recording (Red/Green)
+    - [x] Use `RepaintBoundary` or similar optimizations if necessary
+- [x] Task: Final Visual Polish [dc39f20]
+    - [x] Fine-tune the Green/Gray color balance and transparency levels for readability
+- [x] Task: Conductor - User Manual Verification 'Phase 4: Refinement & Performance' (Protocol in workflow.md) [19bc3d8]
