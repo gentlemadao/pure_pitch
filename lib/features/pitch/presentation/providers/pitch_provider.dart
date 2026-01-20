@@ -61,17 +61,15 @@ class Pitch extends _$Pitch {
             AVAudioSessionCategoryOptions.allowBluetooth |
             AVAudioSessionCategoryOptions.defaultToSpeaker |
             AVAudioSessionCategoryOptions.mixWithOthers,
-        avAudioSessionMode:
-            AVAudioSessionMode.measurement, // Cleanest path for raw analysis
+        avAudioSessionMode: AVAudioSessionMode.defaultMode,
         avAudioSessionRouteSharingPolicy:
             AVAudioSessionRouteSharingPolicy.defaultPolicy,
         androidAudioAttributes: const AndroidAudioAttributes(
           contentType: AndroidAudioContentType.music,
-          usage:
-              AndroidAudioUsage.media, // High-quality media, not communication
+          usage: AndroidAudioUsage.media,
         ),
-        androidAudioFocusGainType: AndroidAudioFocusGainType.gain,
-        androidWillPauseWhenDucked: true,
+        androidAudioFocusGainType: AndroidAudioFocusGainType.gainTransient,
+        androidWillPauseWhenDucked: false,
       ),
     ); // Initial check
     _updateAecStatus(await session.getDevices());
@@ -250,9 +248,9 @@ class Pitch extends _$Pitch {
             encoder: AudioEncoder.pcm16bits,
             sampleRate: _sampleRate,
             numChannels: 1,
-            // Use Raw MIC source for best quality analysis
+            // Use Unprocessed source to bypass OS interference (AGC/NS) which might mute input during playback
             androidConfig: const AndroidRecordConfig(
-              audioSource: AndroidAudioSource.mic,
+              audioSource: AndroidAudioSource.unprocessed,
             ),
             // Disable all OS processing, we handle it in Rust
             echoCancel: false,
