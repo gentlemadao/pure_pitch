@@ -70,7 +70,10 @@ class VocalActivityPainter extends CustomPainter {
 
       // Normalize amplitude for display
       // Amplitude is RMS, usually small (0.01 - 0.1). Let's scale it aggressively.
-      final totalHeight = (point.amplitude * size.height * 10.0).clamp(0.0, size.height);
+      final totalHeight = (point.amplitude * size.height * 10.0).clamp(
+        0.0,
+        size.height,
+      );
 
       if (totalHeight <= 0) continue;
 
