@@ -52,7 +52,9 @@ void main() {
       await withClock(Clock.fixed(startTime), () async {
         // 1. Add data at t=0
         await notifier.analyze(dummySamples);
-        expect(container.read(pitchProvider).history.length, 1);
+        final history = container.read(pitchProvider).history;
+        expect(history.length, 1);
+        expect(history.first.amplitude, equals(0.5));
       });
 
       final laterTime = startTime.add(const Duration(seconds: 10));
